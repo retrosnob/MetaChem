@@ -1,8 +1,8 @@
-import node
 import string
 import random
-import container
-import control
+import metachem.node as node
+import metachem.container as container
+import metachem.control as control
 
 # List of needed control nodes:
 #   s:load - input set of strings

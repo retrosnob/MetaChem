@@ -10,7 +10,7 @@ Classes
 Graph
     The class describing a static MetaChem graph with capability to run the graph.
 """
-import node
+import metachem.node as node
 
 
 class Graph(object):

@@ -1,8 +1,10 @@
-import node
 import numpy as np
 import random
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+
+import metachem.node as node
+
 # import container
 # standard load/ gen node (2 versions, generic load and a generator node specific)
 # Brute sampler pregen boids put into a list container.

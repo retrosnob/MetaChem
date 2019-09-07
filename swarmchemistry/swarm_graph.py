@@ -1,9 +1,9 @@
-from SwarmChemistry import swarm_nodes
-from SwarmChemistry import swarm_particles
-import container
-import control
-import node
-import graph
+from swarmchemistry.swarm_nodes as swarm_nodes
+from swarmchemistry.swarm_particles as swarm_particles
+import metachem.container as container
+import metachem.control as control
+import metachem.node as node
+import metachem.graph as graph
 
 gen_num = 2000
 bounds = [-1000, 1000, -1000, 1000]

@@ -1,7 +1,7 @@
-import stringcat_nodes
-import container
-import control
-import graph
+import stringcatchem.stringcat_nodes as stringcat_nodes
+import metachem.container as container
+import metachem.control as control
+import metachem.graph as graph
 
 # Declare nodes in graph
 
@@ -43,6 +43,6 @@ system = graph.Graph(edges, verbose=True)
 
 # run graph
 system.run_graph(Sload, transitionlimit=200000)
-print TTanks.read()
-print TTank.read()
-print Scomposite.read()
+print (TTanks.read())
+print (TTank.read())
+print (Scomposite.read())

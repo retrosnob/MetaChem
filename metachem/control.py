@@ -1,5 +1,5 @@
-import node
 import random
+import metachem.node as node
 
 
 class BruteSampler(node.Sampler):

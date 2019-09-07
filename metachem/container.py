@@ -1,6 +1,6 @@
 # Set of generic classes for general use in Artificial Chemistries
 
-import node
+import metachem.node as node
 
 # Basic containers using lists/nested lists
 
