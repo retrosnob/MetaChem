@@ -5,10 +5,10 @@ control as well as the specific classes of nodes used in implementing MetaChem g
 Classes
 -------
 ContainerNode
-    Super class  for container nodes in MetaChem
+    Super class for container nodes in MetaChem
 
 ControlNode
-    Super clas for control nodes in MetaChem
+    Super class for control nodes in MetaChem
 
 Termination
     Node which indicated to the graph handler to stop running transitioning between nodes. This node has no outgoing

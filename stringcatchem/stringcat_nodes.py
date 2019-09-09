@@ -37,7 +37,7 @@ class StringCatLoadSampler(node.Sampler):
         pass
 
     def read(self):
-        self.sample = [[random.choice(string.uppercase) for _ in range(0, self.size)] for _ in range(0, self.tanks)]
+        self.sample = [[random.choice(string.ascii_uppercase) for _ in range(0, self.size)] for _ in range(0, self.tanks)]
 
     def pull(self):
         self.containersin.remove(self.sample)
@@ -84,7 +84,7 @@ class StringCatConcatAction(node.Action):
         self.readsample.remove(self.sample)
 
     def check(self):
-        super(StringCatConcatAction, self).check()
+        return super(StringCatConcatAction, self).check()
 
     def process(self):
         # print self.sample
@@ -96,10 +96,10 @@ class StringCatConcatAction(node.Action):
         self.writesample.add(self.sample)
 
 
-class StingCatSplitAction(node.Action):
+class StringCatSplitAction(node.Action):
 
     def __init__(self, writesample, readsample, readcontainers=None):
-        super(StingCatSplitAction, self).__init__(writesample, readsample, readcontainers)
+        super(StringCatSplitAction, self).__init__(writesample, readsample, readcontainers)
         self.sample = None
         pass
 
@@ -110,7 +110,7 @@ class StingCatSplitAction(node.Action):
         self.readsample.remove(self.sample)
 
     def check(self):
-        super(StingCatSplitAction, self).check()
+        return super(StringCatSplitAction, self).check()
 
     def process(self):
         doubleindex = [i for i in range(0, len(self.sample) - 1) if self.sample[i] == self.sample[i+1]]
@@ -138,7 +138,7 @@ class StringCatTransfersSampler(node.Sampler):
         super(StringCatTransfersSampler, self).read()
 
     def pull(self):
-        sample = self.containersin[0].read()
+        sample = self.containersin.read()[0]
         indices = range(0, self.gridcols*self.gridrows)
         pairs = []
         for cell in indices:
