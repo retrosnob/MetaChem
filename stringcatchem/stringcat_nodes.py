@@ -139,7 +139,8 @@ class StringCatTransfersSampler(node.Sampler):
 
     def pull(self):
         sample = self.containersin.read()[0]
-        indices = range(0, self.gridcols*self.gridrows)
+        # Needed to change range to list(range) 2.7->3
+        indices = list(range(0, self.gridcols*self.gridrows))
         pairs = []
         for cell in indices:
             neighbours = [cell+1, cell-1, cell+self.gridrows, cell-self.gridrows]
