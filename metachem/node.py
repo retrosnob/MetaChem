@@ -193,7 +193,7 @@ class Action(ControlNode):
     writesample:    The sample node to which the node will push modified or new particles to. Must be a Sample.
     readsample:     The sample node from which the node will pull particles to modify or use in forming new particles. Must
                     be a Sample.
-    readcontainers: Any other particle or environment containers the node needs to read from for it's process.
+    readcontainers: Any other particle or environment containers the node needs to read from for its process.
 
     Methods
     -------

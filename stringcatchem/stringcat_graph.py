@@ -6,7 +6,7 @@ import metachem.graph as graph
 # Declare nodes in graph
 
 # containers
-TTanks = container.ListTank()
+TTanks = container.ListTank() # * This is named as TTanks because it's essentially a tank of tanks.
 Vtime = container.ListEnvironment()
 Vtime.add(0)
 TTank = stringcat_nodes.StringCatTank()
@@ -18,9 +18,9 @@ TLoad = container.ListTank()  # Empty tank used as place holder as no input tank
 # control nodes
 Sload = stringcat_nodes.StringCatLoadSampler(TLoad, TTanks, size=100, tanks=400)
 Otime = control.ClockObserver(Vtime, Vtime)
-Ssamplertank = control.SimpleSampler(TTanks, TTank)
-Ssamplerstring = control.SimpleSampler(TTank, Scomposite)
-Ssamplerstringdecomp = control.SimpleSampler(TTank, Scomposite)
+Ssamplertank = control.SimpleSampler(TTanks, TTank) # * Very confusing naming but it's called this because it's a tank that we're choosing.
+Ssamplerstring = control.SimpleSampler(TTank, Scomposite) # * Whereas here it's a string that we're choosing.
+Ssamplerstringdecomp = control.SimpleSampler(TTank, Scomposite) # * This is exactly the same as Ssamplerstring. The "decomp" is confusing.
 Ddecomp = stringcat_nodes.StringCatDecompDecision(2, Scomposite)
 Aconcat = stringcat_nodes.StringCatConcatAction(Scomposite, Scomposite)
 Asplit = stringcat_nodes.StringCatSplitAction(Scomposite, Scomposite)

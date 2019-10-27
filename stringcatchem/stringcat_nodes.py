@@ -30,6 +30,7 @@ import metachem.control as control
 class StringCatLoadSampler(node.Sampler):
 
     def __init__(self, containersin, containersout, readcontainers=None, size=1, tanks=1):
+        # * This is called with size=100, tanks=400
         super(StringCatLoadSampler, self).__init__(containersin, containersout, readcontainers)
         self.size = size
         self.tanks = tanks
@@ -37,7 +38,9 @@ class StringCatLoadSampler(node.Sampler):
         pass
 
     def read(self):
+        # * The sample is a list of 400 random lists of one-character strings, each of length 100
         self.sample = [[random.choice(string.ascii_uppercase) for _ in range(0, self.size)] for _ in range(0, self.tanks)]
+        pass
 
     def pull(self):
         self.containersin.remove(self.sample)
@@ -113,13 +116,24 @@ class StringCatSplitAction(node.Action):
         return super(StringCatSplitAction, self).check()
 
     def process(self):
-        doubleindex = [i for i in range(0, len(self.sample) - 1) if self.sample[i] == self.sample[i+1]]
-        index = random.choice(doubleindex)
-        self.sample = [self.sample[0:index], self.sample[index:0]]
+        # * Find all insances of doubled letters
+        doubleindices = [i for i in range(0, len(self.sample) - 1) if self.sample[i] == self.sample[i+1]]
+        # * Pick a random one
+        index = random.choice(doubleindices)
+        # ! This next line is supposed to split the sample string at the doubled letter and add the two halves
+        # ! back into the writesample, but it contains an error. The rightmost expression should not be 
+        # ! self.sample[index:0], it should be self.sample[index+1:] 
+        # Removed:
+        # self.sample = [self.sample[0:index], self.sample[index:0]]
+        # Added:
+        self.sample = [self.sample[0:index], self.sample[index+1:]]
+        
+        # ? Why are the strings written back to the writesample here?
         self.writesample.add(self.sample)
         pass
 
     def push(self):
+        # ? Note that the process method also writes these back to the writesample.
         self.writesample.add(self.sample)
 
 
