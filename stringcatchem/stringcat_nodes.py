@@ -139,13 +139,15 @@ class StringCatSplitAction(node.Action):
 
 class StringCatTransfersSampler(node.Sampler):
 
+    # ? The grid is set up to be 20x20 so that indices can be used to reference the 400 tanks.
+
     def __init__(self, containersin, containersout, readcontainers=None,
                  gridrows=1, gridcols=1, samplesize=1):
         super(StringCatTransfersSampler, self).__init__(containersin, containersout, readcontainers)
-        self.gridrows = gridrows
-        self.gridcols = gridcols
+        self.gridrows = gridrows # 20
+        self.gridcols = gridcols # 20
         self.pairs = []
-        self.samplesize = samplesize
+        self.samplesize = samplesize # 1
         pass
 
     def read(self):
@@ -153,25 +155,45 @@ class StringCatTransfersSampler(node.Sampler):
 
     def pull(self):
         sample = self.containersin.read()[0]
-        # Needed to change range to list(range) 2.7->3
+        # Set up indices so that cells in the grid can be referenced.
         indices = list(range(0, self.gridcols*self.gridrows))
         pairs = []
+
+
+        # The aim of this loop is to select cells from the grid in pairs of neighboring cells and add them
+        # to the pairs list as lists of two indices. Any cells that end up without neighbours are ignored.
         for cell in indices:
-            neighbours = [cell+1, cell-1, cell+self.gridrows, cell-self.gridrows]
+            # Set neighbouring cells of this cell. Note that the grid is toroidal. 
+             neighbours = [cell+1, cell-1, cell+self.gridrows, cell-self.gridrows]
+
             for checkcell in neighbours:
+                # Remove cell from neighbours if it has already been removed from indices.
                 if checkcell not in indices:
                     neighbours.remove(checkcell)
+            # If the current cell has no neighbours then remove it from indices and do the next cell.
             if not neighbours:
                 indices.remove(cell)
                 continue
+            # These last lines are only done if the current cell still has neighbours.
+            # Surely an else would have been clearer than a continue? 
             othercell = random.choice(neighbours)
+            # Remove the cell and a random one of its neighbours from indices.
             indices.remove(othercell)
             indices.remove(cell)
+            # And append them as a list to pairs
             pairs.append([cell, othercell])
+
+
+        # sample: TTanks, the list of lists of strings
+        # samplesize: 1
         for pair in pairs:
+ 
             try:
+                # Pick a random samplesize = 1 strings from the Nth tank in TTanks where
+                # N is the second value in the current pair. 
                 sample0 = random.sample(sample[pair[1]], self.samplesize)
             except ValueError:
+                # If that raises a ValueError (why should it?) then select the Nth tank as a whole??
                 sample0 = sample[pair[1]]
             self.containersin[0][pair[1]].remove(sample0)
             try:
