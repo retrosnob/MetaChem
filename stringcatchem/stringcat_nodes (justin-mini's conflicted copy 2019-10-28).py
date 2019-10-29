@@ -30,6 +30,7 @@ import metachem.control as control
 class StringCatLoadSampler(node.Sampler):
 
     def __init__(self, containersin, containersout, readcontainers=None, size=1, tanks=1):
+        # * This is called with size=100, tanks=400
         super(StringCatLoadSampler, self).__init__(containersin, containersout, readcontainers)
         self.size = size
         self.tanks = tanks
@@ -37,7 +38,9 @@ class StringCatLoadSampler(node.Sampler):
         pass
 
     def read(self):
+        # * The sample is a list of 400 random lists of one-character strings, each of length 100
         self.sample = [[random.choice(string.ascii_uppercase) for _ in range(0, self.size)] for _ in range(0, self.tanks)]
+        pass
 
     def pull(self):
         self.containersin.remove(self.sample)
@@ -113,26 +116,38 @@ class StringCatSplitAction(node.Action):
         return super(StringCatSplitAction, self).check()
 
     def process(self):
-        doubleindex = [i for i in range(0, len(self.sample) - 1) if self.sample[i] == self.sample[i+1]]
-        index = random.choice(doubleindex)
-        self.sample = [self.sample[0:index], self.sample[index:0]]
+        # * Find all insances of doubled letters
+        doubleindices = [i for i in range(0, len(self.sample) - 1) if self.sample[i] == self.sample[i+1]]
+        # * Pick a random one
+        index = random.choice(doubleindices)
+        # ! This next line is supposed to split the sample string at the doubled letter and add the two halves
+        # ! back into the writesample, but it contains an error. The rightmost expression should not be 
+        # ! self.sample[index:0], it should be self.sample[index+1:] 
+        # Removed:
+        # self.sample = [self.sample[0:index], self.sample[index:0]]
+        # Added:
+        self.sample = [self.sample[0:index], self.sample[index+1:]]
+        
+        # ? Why are the strings written back to the writesample here?
         self.writesample.add(self.sample)
         pass
 
     def push(self):
+        # ? Note that the process method also writes these back to the writesample.
         self.writesample.add(self.sample)
 
 
 class StringCatTransfersSampler(node.Sampler):
 
+    # ? The grid is set up to be 20x20 so that indices can be used to reference the 400 tanks.
+
     def __init__(self, containersin, containersout, readcontainers=None,
                  gridrows=1, gridcols=1, samplesize=1):
-
         super(StringCatTransfersSampler, self).__init__(containersin, containersout, readcontainers)
-        self.gridrows = gridrows
-        self.gridcols = gridcols
+        self.gridrows = gridrows # 20
+        self.gridcols = gridcols # 20
         self.pairs = []
-        self.samplesize = samplesize
+        self.samplesize = samplesize # 1
         pass
 
     def read(self):
@@ -140,35 +155,52 @@ class StringCatTransfersSampler(node.Sampler):
 
     def pull(self):
         sample = self.containersin.read()[0]
+        # Set up indices so that cells in the grid can be referenced.
         indices = list(range(0, self.gridcols*self.gridrows))
         pairs = []
+
+
+        # The aim of this loop is to select cells from the grid in pairs of neighboring cells and add them
+        # to the pairs list as lists of two indices. Any cells that end up without neighbours are ignored.
         for cell in indices:
-            neighbours = [cell+1, cell-1, cell+self.gridrows, cell-self.gridrows]
+            # Set neighbouring cells of this cell. Note that the grid is toroidal. 
+             neighbours = [cell+1, cell-1, cell+self.gridrows, cell-self.gridrows]
+
             for checkcell in neighbours:
+                # Remove cell from neighbours if it has already been removed from indices.
                 if checkcell not in indices:
                     neighbours.remove(checkcell)
+            # If the current cell has no neighbours then remove it from indices and do the next cell.
             if not neighbours:
                 indices.remove(cell)
                 continue
+            # These last lines are only done if the current cell still has neighbours.
+            # Surely an else would have been clearer than a continue? 
             othercell = random.choice(neighbours)
-
-            if othercell not in indices:
-                raise Exception("Error in pull() method: Trying to remove " + str(othercell) + " from " + str(indices))
-
+            # Remove the cell and a random one of its neighbours from indices.
             indices.remove(othercell)
             indices.remove(cell)
+            # And append them as a list to pairs
             pairs.append([cell, othercell])
+
+
+        # sample: TTanks, the list of lists of strings
+        # samplesize: 1
         for pair in pairs:
+ 
             try:
+                # Pick a random samplesize = 1 strings from the Nth tank in TTanks where
+                # N is the second value in the current pair. 
                 sample0 = random.sample(sample[pair[1]], self.samplesize)
             except ValueError:
+                # If that raises a ValueError (why should it?) then select the Nth tank as a whole??
                 sample0 = sample[pair[1]]
-            self.containersin.read()[0][pair[1]].remove(sample0)
+            self.containersin[0][pair[1]].remove(sample0)
             try:
                 sample1 = random.sample(sample[pair[0]], self.samplesize)
             except ValueError:
                 sample1 = sample[pair[0]]
-            self.containersin.read()[0][pair[0]].remove(sample1)
+            self.containersin[0][pair[0]].remove(sample1)
             self.sample.append([sample0, sample1])
         self.pairs = pairs
         pass

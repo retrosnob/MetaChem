@@ -30,6 +30,7 @@ class SimpleSampler(node.Sampler):
         pass
 
     def read(self):
+        # * Set the sample to be equal to size random elements taken from the container (as defined by the return value of its read method). 
         self.sample = random.sample(self.containersin.read(), min(self.size, len(self.containersin.read())))
 
 
