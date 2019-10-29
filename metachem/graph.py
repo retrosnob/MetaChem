@@ -51,11 +51,16 @@ class Graph(object):
         self.controledges = controledges
         self.graphdict = {}
         self.verbose = verbose
+        # for each "from" node in the list of edges
         for edge in self.controledges:
+            # if the current from edge is already in the dictionary
             if edge[0] in self.graphdict:
                 try:
+                    # then make the "from" node now point to a list of "to" nodes instead of just one. Note that the second "to" node is converted to a list.
+                    # ! But what if the second "to" node is already a list type? Then it will be converted to a list of list.
                     self.graphdict[edge[0]] = self.graphdict[edge[0]]+[edge[1]]
                 except TypeError:
+                    # Catch the case in which the existing "to" node is node 
                     self.graphdict[edge[0]] = [self.graphdict[edge[0]]]+[edge[1]]
             else:
                 self.graphdict[edge[0]] = edge[1]   # Dictionary of node edge destinations indexed by source

@@ -10,7 +10,11 @@ class RBN:
 
      """
 
+<<<<<<< HEAD
     def __init__(self, n, k, default=None):
+=======
+    def __init__(self, n, k):
+>>>>>>> 911c8853e66a3e1e5d152a7ffaea81829ff15704
 
         """
         The RBN constructor. Creates an NK RBN and finds its attractor cycle.
@@ -20,9 +24,12 @@ class RBN:
         n: The number of nodes in the underlying digraph.
         
         k: The indegree of each node.
+<<<<<<< HEAD
 
         default: A default starting node value for all nodes. Can be 1, 0 or None (omitted). If default is None then
         initial node values are random.
+=======
+>>>>>>> 911c8853e66a3e1e5d152a7ffaea81829ff15704
         """
 
         # print("Initializing RBN object with n = " + str(n) + ", k = " + str(k))
@@ -44,7 +51,11 @@ class RBN:
 
         for node in nodes:
             # Update the lists of states and boolean functions
+<<<<<<< HEAD
             node_states.append(default if default != None else choice((1, 0)))
+=======
+            node_states.append(choice((1, 0)))
+>>>>>>> 911c8853e66a3e1e5d152a7ffaea81829ff15704
             boolean_function = randint(0, 2**(2**k)-1) # randint is inclusive on both sides
             node_boolean_functions.append(boolean_function)
 
