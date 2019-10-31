@@ -4,17 +4,21 @@ from operator import add
 
 class Atom:
 
-    """ Represents an Atom in the Frozen-Node Spiky RBN Chemistry.
-
-    To do:
-
-    Should bonding be a method in the Atom or in the Chemistry itself?
+    """
+    Represents an Atom in the Frozen-Node Spiky RBN Chemistry.
 
     """
 
+    # TODO 
+    # TODO  Make some of the methods static.
+    # TODO  Need a way to determine which of the ILs are free to bond and which are occupied.
+
+
+
     def __init__(self, id, n, k):
 
-        """ The Atom class constructor.
+        """
+        The Atom class constructor.
 
         Parameters:
 
@@ -26,18 +30,35 @@ class Atom:
 
         """
         self.id = id
-        self.rbn = rbn.RBN(n, k, 0, rbn.NodeSpace(100))
+        self.rbn = rbn.RBN(n, k, 0, rbn.NodeSpace.getInstance())
         self.ILs = self.calculate_interaction_lists()
-        self.IL_spikes = self.calculate_spikes()
+        # self.spike_values = self.krastev_spikes()
+
+        self.spike_values, self.spike_types = self.watson_spikes()
+        assert(len(self.ILs) == len(self.spike_values) == len(self.spike_types))
+
+        # The current interaction site method return parallel lists. Here we convert those
+        # into a single list of InteractionSite objects. 
+        # TODO Decide if parallel lists or single list of objects is best and tidy up. One advantage
+        # TODO of the object approach is that the interaction site can be marked as available/unavailable.
+        self.interaction_sites = []
+        for i, _ in enumerate(self.ILs):
+            interaction_site = InterationSite()
+            interaction_site.nodelist = self.ILs[i]
+            interaction_site.spike_value = self.spike_values[i]
+            interaction_site.spike_type = self.spike_types[i]
+            self.interaction_sites.append(interaction_site)
+            
+
 
     def __str__(self):
         s = 'Atom ' + str(self.id) + '\n'
         ILs_idxs = [[node.loc_idx for node in IL] for IL in self.ILs] 
         s += str(ILs_idxs) + '\n'
-        s += str(self.IL_spikes) + '\n'
+        s += str(self.spike_values) + '\n'
         return s
 
-    def calculate_spikes(self):
+    def krastev_spikes(self):
         """
         Each interaction list is given a "spike" value, calculated over the length of the attractor cycle
         This is done by adding 1 for each true state and -1 for each false state for each node over the length of 
@@ -62,6 +83,37 @@ class Atom:
         ILs_idxs = [[node.loc_idx for node in IL] for IL in self.ILs] 
         # Sum the node spikes referenced by the local_index values of the ILs.
         return list(map(sum, [[node_spikes[i] for i in lst] for lst in ILs_idxs]))
+
+    def watson_spikes(self):
+        # Create lists such that:
+        # frozen_true[node.loc_idx] == True iff node is frozen true
+        # frozen_false[node.loc_idx] == True iff node is frozen false
+        zipped_cycle = list(zip(*self.rbn.attractor_cycle))
+        frozen_true = [all(values) for values in zipped_cycle]
+        frozen_false = [any(values)==False for values in zipped_cycle]
+
+        spike_values = []
+        spike_types = []
+        for IL in self.ILs:
+            spike_value = 0
+            # Set the spike type on the basis of the IL length.
+            if len(IL) >= 10:
+                spike_types.append(3)
+            elif len(IL) >= 5:
+                spike_types.append(2)
+            else:
+                spike_types.append(1)
+
+            # Calculate the spike value for this IL based on whether/how nodes are frozen.
+            for node in IL:
+                if frozen_true[node.loc_idx]:
+                    spike_value += 1
+                elif frozen_false[node.loc_idx]:
+                    spike_value += -1
+            spike_values.append(spike_value)
+
+        return spike_values, spike_types
+
 
     def calculate_interaction_lists(self):
         """
@@ -103,10 +155,19 @@ class Atom:
         #   i ++
         # end
 
+    def get_free_ILs(self):
+        return self.ILs
+
+class InterationSite:
+    def __init__(self):
+        self.available = True
+        self.nodelist = []
+        self.spike_value = None
+        self.spike_type = None
 
 if __name__ == "__main__":
     print("Atom.py invoked as script...")
-    a = Atom(1, 12, 2)
-    print(a)
+    rbn.NodeSpace(1000)
+    print(Atom(0, 12, 2))
     pass
 

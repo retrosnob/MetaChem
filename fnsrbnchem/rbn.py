@@ -5,13 +5,7 @@ import random
 
 """
 The offset + id method of looking up the node value won't work after nodes have been swapped.
-
-
-
 """
-
-
-
 
 class NodeSpace:
     """
@@ -154,7 +148,6 @@ class RBN:
 class RBNNode:
     """
     Represents a node within an RBN.
-
     """
     def __init__(self, loc_idx, glob_idx, bool_func=0):
         self.loc_idx = loc_idx
