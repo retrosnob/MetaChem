@@ -13,11 +13,7 @@ import metachem.graph as graph
 # Declare nodes in graph
 
 # containers
-<<<<<<< HEAD
-TTanks = container.ListTank() # * TTanks is described as a set of Tanks in the text
-=======
 TTanks = container.ListTank() # * This is named as TTanks because it's essentially a tank of tanks.
->>>>>>> 911c8853e66a3e1e5d152a7ffaea81829ff15704
 Vtime = container.ListEnvironment()
 Vtime.add(0)
 TTank = stringcat_nodes.StringCatTank()
