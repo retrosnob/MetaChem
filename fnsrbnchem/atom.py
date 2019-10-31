@@ -28,11 +28,13 @@ class Atom:
         self.id = id
         self.rbn = rbn.RBN(n, k, 0, rbn.NodeSpace(100))
         self.ILs = self.calculate_interaction_lists()
+        self.IL_spikes = self.calculate_spikes()
 
     def __str__(self):
         s = 'Atom ' + str(self.id) + '\n'
-        s += str(self.interaction_lists) + '\n'
-        s += str(self.interaction_list_spikes) + '\n'
+        ILs_idxs = [[node.loc_idx for node in IL] for IL in self.ILs] 
+        s += str(ILs_idxs) + '\n'
+        s += str(self.IL_spikes) + '\n'
         return s
 
     def calculate_spikes(self):
@@ -43,29 +45,23 @@ class Atom:
 
         Returns:
 
-        interaction_list_spikes (list of integers): A list of the spike values for each interaction list.
-        # for node_list in self.rbn.attractor_cycle:
-        #     print(node_list)
+        List of integers: A list of the spike values for each interaction list.
+        """ 
+        # Sum each node's states over the attractor cycle.
         zipped_cycle = list(zip(*self.rbn.attractor_cycle))
-        spikes = [sum(tpl) for tpl in zipped_cycle]
-        # TO DO: Make each 0 contribute -1
-        # This can be calculated since the number of zeroes in the spike is equal to
-        #  attractor cycle length - current node spike value
-        # so if we multiply this value by -1 and add it to the current node spike value then we're done
-        node_spikes = list(map(lambda x: (len(self.rbn.attractor_cycle) - x) * -1 + x, spikes))
-        # self.spikes now contains the spike value for each node
-        # In order to get the spikes for each IL, we have to sum up the spikes for each node on that IL
-        total = 0
-        interaction_list_spikes = []
-        for interaction_list in self.interaction_lists:
-            for node in interaction_list:
-                total += node_spikes[node]
-            interaction_list_spikes.append(total)
-            total = 0
-        # self.interaction_list_spikes = [reduce(add, self.node_spikes[node]) for interaction_list in self.interaction_lists for node in interaction_list]
-        return interaction_list_spikes   
-                """
-         
+        summed_cycle = [sum(item) for item in zipped_cycle]
+
+        # We now make each zero (false) contribute -1 by counting the zeroes, multiplying the count by -1 and 
+        # adding it to the current node spike value. The count of the number of zeroes is equal to the length
+        # of the attractor minus the summed value for this node since each non-zero value added 1 to the sum.
+        node_spikes = list(map(lambda x: (len(self.rbn.attractor_cycle) - x) * -1 + x, summed_cycle))
+
+        # We now have the spike values for each node in the IL. To get the spikes for the whole IL, we have 
+        # to sum them up:
+        # Get the ILs as lists of local_index values rather than objects.
+        ILs_idxs = [[node.loc_idx for node in IL] for IL in self.ILs] 
+        # Sum the node spikes referenced by the local_index values of the ILs.
+        return list(map(sum, [[node_spikes[i] for i in lst] for lst in ILs_idxs]))
 
     def calculate_interaction_lists(self):
         """
@@ -111,6 +107,6 @@ class Atom:
 if __name__ == "__main__":
     print("Atom.py invoked as script...")
     a = Atom(1, 12, 2)
-    print([[node.loc_idx for node in il] for il in a.ILs])
+    print(a)
     pass
 
