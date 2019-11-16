@@ -189,6 +189,9 @@ class RBNNode:
         self.bool_func = bool_func
         pass
 
+    def __str__(self):
+        return str(self.loc_idx)
+
 if __name__ == "__main__":
     print("Hello rbn...")
     NodeSpace(100)

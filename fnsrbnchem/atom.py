@@ -31,11 +31,11 @@ class Atom:
         """
         if (particle1 and particle2):
             self.rbn = rbn.RBN(rbn1=particle1.rbn, rbn2=particle2.rbn)
+            self.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
         else:
             self.rbn = rbn.RBN(n, k, 0, rbn.NodeSpace.getInstance())
+            self.id = id
 
-
-        self.id = id
         self.ILs = self.calculate_interaction_lists()
         # self.spike_values = self.krastev_spikes()
 
@@ -163,6 +163,15 @@ class InterationSite:
         self.nodelist = []
         self.spike_value = None
         self.spike_type = None
+
+    def __str__(self):
+        s = ""
+        s += "Available: " + str(self.available) + "\n"
+        s += "Nodelist: " + str(list(map(str, self.nodelist))) + "\n"
+        s += "Spike value: " + str(self.spike_value) + "\n"
+        s += "Spike type: " + str(self.spike_type) + "\n"
+        return s
+
 
 if __name__ == "__main__":
     print("Atom.py invoked as script...")
