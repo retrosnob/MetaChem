@@ -38,10 +38,16 @@ class RBN:
     
     offset = 0 # (static) The offset into the nodespace bitarray.
 
-    def __init__(self, n, k, offset, nodespace):
+    def __init__(self, n=None, k=None, offset=None, nodespace=None, rbn1=None, rbn2=None):
+        if (rbn1 and rbn2):
+            self.composeRBN(rbn1, rbn2)
+        elif (n and k):
+            self.newRBN(n, k, offset, nodespace)
+
+    def newRBN(self, n, k, offset, nodespace):
         self.n = n
         self.k = k
-        self.offset = offset
+        self.offset = offset # This doesn't make sense. The nodes should know their place in the nodespace, that's all.
         self.nodespace = nodespace
         # Create new node objects.
         self.nodes = [RBNNode(i, offset+i) for i in list(range(n))]
@@ -59,7 +65,32 @@ class RBN:
             # Create a random boolean function for this node.
             node.bool_func = random.randint(0, 2**(2**k)-1) # Nb randint is inclusive on both sides
         
-        self.basin, self.attractor_cycle = self._calculate_cycle()
+        self.basin, self.attractor = self._calculate_cycle()
+
+    
+    def composeRBN(self, rbn1, rbn2):
+        # What will the new RBN look like?
+        # We know the inward and outward edges of each.
+        # There must be a concept of some edge swaps to do.
+        # Concatenate the nodes lists and resequence then from 0 to n1+n2.
+        # k stays the same; the final n becomes n1+n2.
+        # We don't need to worry about decomposing them because the binary tree does that.
+        # What happens with the boolean functions? Nothing. They don't depend on n. Phew.
+        # Recalculate the basin and attractor.
+        # The index into the nodespace (if implemented) shouldn't change.
+        # Having node objects was an excellent idea!
+        assert(rbn1.k == rbn2.k) # An assumption at the moment but could be relaxed later.
+        self.k = rbn1.k
+
+        assert(rbn1.nodespace == rbn2.nodespace)
+        self.nodespace = rbn1.nodespace
+
+        self.nodes = rbn1.nodes + rbn2.nodes
+        for idx, node in enumerate(self.nodes):
+            node.loc_idx = idx
+        self.n = rbn1.n + rbn2.n
+        self.basin, self.attractor = self._calculate_cycle()
+
 
     def getnextstate(self, node, currentstates=None):
         """
@@ -105,13 +136,13 @@ class RBN:
             states = self.getnextstates(states)
         cycle_start = cycle.index(states)
         basin = cycle[0:cycle_start]
-        attractor_cycle = cycle[cycle_start:]
-        return basin, attractor_cycle
+        attractor = cycle[cycle_start:]
+        return basin, attractor
 
     def attractorstring(self):
         """ Returns a string representation of the attractor of the RBN. """
         attractorstring = ""
-        for count, state in enumerate(self.attractor_cycle):
+        for count, state in enumerate(self.attractor):
             attractorstring += str(count) + " " + str(state) + linesep
         return attractorstring
     
@@ -142,7 +173,7 @@ class RBN:
         summarystring += "Attractor:" + linesep
         summarystring += self.attractorstring() + linesep
         summarystring += "Check: next state would be..." + linesep
-        summarystring += str(self.getnextstates(self.attractor_cycle[-1])) + linesep
+        summarystring += str(self.getnextstates(self.attractor[-1])) + linesep
         return summarystring
 
 class RBNNode:
@@ -160,5 +191,11 @@ class RBNNode:
 
 if __name__ == "__main__":
     print("Hello rbn...")
-    rbn = RBN(12, 2, 0, NodeSpace(100))
-    print(rbn.summarystring())
+    NodeSpace(100)
+    a = RBN(12, 2, 0, NodeSpace.getInstance())
+    b = RBN(12, 2, 0, NodeSpace.getInstance())
+    print(a.summarystring())
+    print(b.summarystring())
+    c = RBN(rbn1=a, rbn2=b)
+    print(c.summarystring())
+

@@ -24,3 +24,9 @@ def canbond(site1, site2):
     else:
         return False
     
+def bond(p1, p2, site1, site2):
+    # Need code to create a new particle from two existing particles.
+    # Do the edge swaps between the nodelists in site1 and site2
+    # Update inedges and out_edges
+    # What do we do about local indexes?
+    # Recalculate interaction sites

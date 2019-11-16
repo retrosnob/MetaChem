@@ -15,7 +15,7 @@ class Atom:
 
 
 
-    def __init__(self, id, n, k):
+    def __init__(self, id=None, n=None, k=None, particle1=None, particle2=None):
 
         """
         The Atom class constructor.
@@ -29,8 +29,13 @@ class Atom:
         Returns: None
 
         """
+        if (particle1 and particle2):
+            self.rbn = rbn.RBN(rbn1=particle1.rbn, rbn2=particle2.rbn)
+        else:
+            self.rbn = rbn.RBN(n, k, 0, rbn.NodeSpace.getInstance())
+
+
         self.id = id
-        self.rbn = rbn.RBN(n, k, 0, rbn.NodeSpace.getInstance())
         self.ILs = self.calculate_interaction_lists()
         # self.spike_values = self.krastev_spikes()
 
@@ -49,8 +54,6 @@ class Atom:
             interaction_site.spike_type = self.spike_types[i]
             self.interaction_sites.append(interaction_site)
             
-
-
     def __str__(self):
         s = 'Atom ' + str(self.id) + '\n'
         ILs_idxs = [[node.loc_idx for node in IL] for IL in self.ILs] 
@@ -88,7 +91,7 @@ class Atom:
         # Create lists such that:
         # frozen_true[node.loc_idx] == True iff node is frozen true
         # frozen_false[node.loc_idx] == True iff node is frozen false
-        zipped_cycle = list(zip(*self.rbn.attractor_cycle))
+        zipped_cycle = list(zip(*self.rbn.attractor))
         frozen_true = [all(values) for values in zipped_cycle]
         frozen_false = [any(values)==False for values in zipped_cycle]
 
@@ -113,7 +116,6 @@ class Atom:
             spike_values.append(spike_value)
 
         return spike_values, spike_types
-
 
     def calculate_interaction_lists(self):
         """
@@ -155,9 +157,6 @@ class Atom:
         #   i ++
         # end
 
-    def get_free_ILs(self):
-        return self.ILs
-
 class InterationSite:
     def __init__(self):
         self.available = True
@@ -168,6 +167,11 @@ class InterationSite:
 if __name__ == "__main__":
     print("Atom.py invoked as script...")
     rbn.NodeSpace(1000)
-    print(Atom(0, 12, 2))
+    a = Atom(0, 12, 2)
+    b = Atom(1, 12, 2)
+    c = Atom(particle1=a, particle2=b)
+    print(a)
+    print(b)
+    print(c)
     pass
 
