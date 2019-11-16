@@ -1,6 +1,7 @@
 import rbn
 import atom
 import reaction
+import viz
 
 rbn.NodeSpace(100)
 
@@ -13,6 +14,7 @@ for i in range(1000):
         print("Bond possible")
         break
 print(a)
+viz.vizualize(a)
 print(b)
 print(a_site)
 print(b_site)
