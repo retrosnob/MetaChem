@@ -13,9 +13,11 @@ for i in range(1000):
     if a_site is not None:
         print("Bond possible")
         break
-print(a)
-viz.vizualize(a)
-print(b)
-print(a_site)
-print(b_site)
+# print(a)
+# print(b)
+# print(a_site)
+# print(b_site)
+# c = reaction.bond(a, b, a_site, b_site)
+c = atom.Atom(particle1=a, particle2=b)
+viz.visualize(c)
 

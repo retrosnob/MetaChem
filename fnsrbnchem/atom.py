@@ -36,10 +36,10 @@ class Atom:
             self.rbn = rbn.RBN(n, k, 0, rbn.NodeSpace.getInstance())
             self.id = id
 
-        self.ILs = self.calculate_interaction_lists()
+        self.ILs = self._calculate_interaction_lists()
         # self.spike_values = self.krastev_spikes()
 
-        self.spike_values, self.spike_types = self.watson_spikes()
+        self.spike_values, self.spike_types = self._watson_spikes()
         assert(len(self.ILs) == len(self.spike_values) == len(self.spike_types))
 
         # The current interaction site method return parallel lists. Here we convert those
@@ -61,7 +61,7 @@ class Atom:
         s += str(self.spike_values) + '\n'
         return s
 
-    def krastev_spikes(self):
+    def _krastev_spikes(self):
         """
         Each interaction list is given a "spike" value, calculated over the length of the attractor cycle
         This is done by adding 1 for each true state and -1 for each false state for each node over the length of 
@@ -78,7 +78,7 @@ class Atom:
         # We now make each zero (false) contribute -1 by counting the zeroes, multiplying the count by -1 and 
         # adding it to the current node spike value. The count of the number of zeroes is equal to the length
         # of the attractor minus the summed value for this node since each non-zero value added 1 to the sum.
-        node_spikes = list(map(lambda x: (len(self.rbn.attractor_cycle) - x) * -1 + x, summed_cycle))
+        node_spikes = list(map(lambda x: (len(self.rbn.attractor) - x) * -1 + x, summed_cycle))
 
         # We now have the spike values for each node in the IL. To get the spikes for the whole IL, we have 
         # to sum them up:
@@ -87,7 +87,7 @@ class Atom:
         # Sum the node spikes referenced by the local_index values of the ILs.
         return list(map(sum, [[node_spikes[i] for i in lst] for lst in ILs_idxs]))
 
-    def watson_spikes(self):
+    def _watson_spikes(self):
         # Create lists such that:
         # frozen_true[node.loc_idx] == True iff node is frozen true
         # frozen_false[node.loc_idx] == True iff node is frozen false
@@ -117,7 +117,7 @@ class Atom:
 
         return spike_values, spike_types
 
-    def calculate_interaction_lists(self):
+    def _calculate_interaction_lists(self):
         """
         Creates and calculates the interaction list for an Atom.
 

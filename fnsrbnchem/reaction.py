@@ -49,7 +49,10 @@ def sitescanbond(site1, site2):
     
 def bond(p1, p2, site1, site2):
     # Do the edge swaps between the nodelists in site1 and site2
-    # Update inedges and out_edges
+    for i in range(min(len(site1)))
+
+
+    # Update inedges and out_edges: will these change?
     # What do we do about local indexes?
     # Recalculate interaction sites
     # Important to remember that p1 and p2 are not lost by the bonding process

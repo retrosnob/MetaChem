@@ -14,16 +14,9 @@ def visualize(particle):
     """
     Set the scatter plot to have axes -100 up to 100 for both x and y.
     Calculate the angle between nodes as 2pi/N. Calculate the x, y coord
-
-
     """
-
-
     print("Visualize")
 
-    # for thisnode in particle.rbn.nodes:
-    #     for thatnode in thisnode.in_edges:
-    #         pass
     n = particle.rbn.n
     fig = plt.figure()
     ax = fig.add_subplot(111, polar=True)
@@ -36,22 +29,18 @@ def visualize(particle):
 
     # Plot the points.
     plt.polar(thetas, radii, 'o', markersize=15)
-    # Plot lines between points where edges exist.
-    # plt.plot([thetas[0],thetas[1]],[radii[0],radii[1]],'k-')
-    # plt.arrow(thetas[0], radii[0], thetas[1]-thetas[0], 0, head_length=0.05, length_includes_head=True, head_width=0.05, zorder=5)
 
     for thisnode in particle.rbn.nodes:
         for thatnode in thisnode.in_edges:
-            # plt.arrow(thetas[thatnode.loc_idx], radii[0], thetas[thisnode.loc_idx]-thetas[thatnode.loc_idx], 0, head_length=0.05, length_includes_head=True, head_width=0.05, zorder=5)
             ax.annotate('', # A textless annotation is just an arrow.
-                xy=(thetas[thisnode.loc_idx], radius),  # to this point
-                xytext=(thetas[thatnode.loc_idx], radius),    # from this point
+                xy=(thetas[thisnode.loc_idx], radius),  # TO this point
+                xytext=(thetas[thatnode.loc_idx], radius),    # FROM this point
                 arrowprops=dict(arrowstyle='->', shrinkA=15, shrinkB=15)
                 )
 
 
     plt.axis('off')
-
+    # For some reason I can't use plt.show() because matplotlib thinks I'm headless.
     fig.savefig('temp.png')
 
 if __name__ == "__main__":

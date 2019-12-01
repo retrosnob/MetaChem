@@ -56,7 +56,7 @@ class RBN:
         for node in self.nodes:
             # Make a list of all other nodes but this one and select k of them at random from which to add
             # to incoming edges.
-            node.in_edges = random.sample(self.othernodes(node), k)
+            node.in_edges = random.sample(self._othernodes(node), k)
 
             # Create the corresponding outgoing edges in the other nodes.
             node.in_edges[0].out_edges.append(node)
@@ -99,7 +99,7 @@ class RBN:
         If the currentstates argument is not supplied then the actual current states are used.
         """
         if currentstates == None:
-            currentstates = self.getcurrentstates()
+            currentstates = self._getcurrentstates()
         # boolean_function_lookup is used to look up the next state from the boolean function
         boolean_function_lookup = 0
         for (i, other_node) in enumerate(node.in_edges):
@@ -109,16 +109,16 @@ class RBN:
             boolean_function_lookup = boolean_function_lookup + 2**i * currentstates[other_node.loc_idx]
         return 1 if node.bool_func >> boolean_function_lookup & 1 else 0
     
-    def getcurrentstate(self, node):
+    def _getcurrentstate(self, node):
         return self.nodespace[RBN.offset + node.loc_idx]
 
-    def getcurrentstates(self):
-        return [self.getcurrentstate(node) for node in self.nodes]
+    def _getcurrentstates(self):
+        return [self._getcurrentstate(node) for node in self.nodes]
 
-    def getnextstates(self, currenstates):
+    def _getnextstates(self, currenstates):
         return [self.getnextstate(node, currenstates) for node in self.nodes]
     
-    def othernodes(self, node):
+    def _othernodes(self, node):
         return self.nodes[:node.loc_idx] + self.nodes[node.loc_idx+1:]
 
     def _calculate_cycle(self):
@@ -130,10 +130,10 @@ class RBN:
         
         """
         cycle = []
-        states = self.getcurrentstates()
+        states = self._getcurrentstates()
         while states not in cycle:
             cycle.append(states)
-            states = self.getnextstates(states)
+            states = self._getnextstates(states)
         cycle_start = cycle.index(states)
         basin = cycle[0:cycle_start]
         attractor = cycle[cycle_start:]
@@ -173,7 +173,7 @@ class RBN:
         summarystring += "Attractor:" + linesep
         summarystring += self.attractorstring() + linesep
         summarystring += "Check: next state would be..." + linesep
-        summarystring += str(self.getnextstates(self.attractor[-1])) + linesep
+        summarystring += str(self._getnextstates(self.attractor[-1])) + linesep
         return summarystring
 
 class RBNNode:
