@@ -1,4 +1,4 @@
 {
     "debug.console.fontSize": 16,
-    "python.pythonPath": "/opt/anaconda/bin/python"
+    "python.pythonPath": "/home/justin/anaconda3/bin/python"
 }

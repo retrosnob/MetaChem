@@ -49,7 +49,7 @@ def sitescanbond(site1, site2):
     
 def bond(p1, p2, site1, site2):
     # Do the edge swaps between the nodelists in site1 and site2
-    for i in range(min(len(site1)))
+    # for i in range(min(len(site1)))
 
 
     # Update inedges and out_edges: will these change?

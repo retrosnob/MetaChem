@@ -1,5 +1,5 @@
-from bitarray import bitarray
 from os import linesep
+from bitarray import bitarray
 import array
 import random
 
@@ -35,28 +35,26 @@ class NodeSpace:
         return len(self.arr)
 
 class RBN:
-    
     offset = 0 # (static) The offset into the nodespace bitarray.
 
-    def __init__(self, n=None, k=None, offset=None, nodespace=None, rbn1=None, rbn2=None):
-        if (rbn1 and rbn2):
-            self.composeRBN(rbn1, rbn2)
-        elif (n and k):
-            self.newRBN(n, k, offset, nodespace)
+    def __init__(self):
+        pass
 
-    def newRBN(self, n, k, offset, nodespace):
-        self.n = n
-        self.k = k
-        self.offset = offset # This doesn't make sense. The nodes should know their place in the nodespace, that's all.
-        self.nodespace = nodespace
+    @classmethod
+    def new(cls, n, k, offset, nodespace):
+        obj = cls()
+        obj.k = k
+        obj.offset = offset # This doesn't make sense. The nodes should know their place in the nodespace, that's all.
+        obj.n = n
+        obj.nodespace = nodespace
         # Create new node objects.
-        self.nodes = [RBNNode(i, offset+i) for i in list(range(n))]
+        obj.nodes = [RBNNode(i, offset+i) for i in list(range(n))]
         # ! Note that the offset+1 method of calculating the index in the nodespace won't work
         # ! after swaps have taken place, so this can only be used in the constructor call.         
-        for node in self.nodes:
+        for node in obj.nodes:
             # Make a list of all other nodes but this one and select k of them at random from which to add
             # to incoming edges.
-            node.in_edges = random.sample(self._othernodes(node), k)
+            node.in_edges = random.sample(obj._othernodes(node), k)
 
             # Create the corresponding outgoing edges in the other nodes.
             node.in_edges[0].out_edges.append(node)
@@ -65,10 +63,11 @@ class RBN:
             # Create a random boolean function for this node.
             node.bool_func = random.randint(0, 2**(2**k)-1) # Nb randint is inclusive on both sides
         
-        self.basin, self.attractor = self._calculate_cycle()
+        obj.basin, obj.attractor = obj._calculate_cycle()
+        return obj
 
-    
-    def composeRBN(self, rbn1, rbn2):
+    @classmethod
+    def compose(cls, rbn1, rbn2):
         # What will the new RBN look like?
         # We know the inward and outward edges of each.
         # There must be a concept of some edge swaps to do.
@@ -80,17 +79,19 @@ class RBN:
         # The index into the nodespace (if implemented) shouldn't change.
         # Having node objects was an excellent idea!
         assert(rbn1.k == rbn2.k) # An assumption at the moment but could be relaxed later.
-        self.k = rbn1.k
+
+        obj = cls()
+        obj.k = rbn1.k
 
         assert(rbn1.nodespace == rbn2.nodespace)
-        self.nodespace = rbn1.nodespace
+        obj.nodespace = rbn1.nodespace
 
-        self.nodes = rbn1.nodes + rbn2.nodes
-        for idx, node in enumerate(self.nodes):
+        obj.nodes = rbn1.nodes + rbn2.nodes
+        for idx, node in enumerate(obj.nodes):
             node.loc_idx = idx
-        self.n = rbn1.n + rbn2.n
-        self.basin, self.attractor = self._calculate_cycle()
-
+        obj.n = rbn1.n + rbn2.n
+        obj.basin, obj.attractor = obj._calculate_cycle()
+        return obj
 
     def getnextstate(self, node, currentstates=None):
         """
@@ -195,10 +196,10 @@ class RBNNode:
 if __name__ == "__main__":
     print("Hello rbn...")
     NodeSpace(100)
-    a = RBN(12, 2, 0, NodeSpace.getInstance())
-    b = RBN(12, 2, 0, NodeSpace.getInstance())
+    a = RBN.new(12, 2, 0, NodeSpace.getInstance())
+    b = RBN.new(12, 2, 0, NodeSpace.getInstance())
     print(a.summarystring())
     print(b.summarystring())
-    c = RBN(rbn1=a, rbn2=b)
+    c = RBN.compose(rbn1=a, rbn2=b)
     print(c.summarystring())
 

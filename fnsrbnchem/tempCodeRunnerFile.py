@@ -7,8 +7,8 @@ rbn.NodeSpace(100)
 
 count = 0
 for i in range(1000):
-    a = particle.Particle.new(12, 2, 0)
-    b = particle.Particle.new(12, 2, 0)
+    a = particle.Particle.new(12, 2)
+    b = particle.Particle.new(12, 2)
     a_site, b_site = reaction.particlescanbond(a, b)
     if a_site is not None:
         print("Bond possible")
@@ -18,6 +18,6 @@ for i in range(1000):
 # print(a_site)
 # print(b_site)
 # c = reaction.bond(a, b, a_site, b_site)
-c = particle.Particle.compose(particle1=a, particle2=b)
+c = Particle.compose(particle1=a, particle2=b)
 viz.visualize(c)
 

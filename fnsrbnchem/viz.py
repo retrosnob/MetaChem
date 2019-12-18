@@ -7,7 +7,7 @@ import matplotlib as mpl
 
 import matplotlib.pyplot as plt
 import math
-import atom
+import particle
 import rbn
 
 def visualize(particle):
@@ -46,7 +46,7 @@ def visualize(particle):
 if __name__ == "__main__":
     print("viz.py invoked as script...")
     rbn.NodeSpace(100)
-    a = atom.Atom(0, 12, 2)
+    a = particle.Particle(0, 12, 2)
     print(a.rbn)
     visualize(a)
     

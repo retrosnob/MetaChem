@@ -2,23 +2,21 @@ import rbn
 from collections import defaultdict
 from operator import add
 
-class Atom:
+class Particle:
 
     """
     Represents an Atom in the Frozen-Node Spiky RBN Chemistry.
 
     """
 
-    # TODO 
-    # TODO  Make some of the methods static.
     # TODO  Need a way to determine which of the ILs are free to bond and which are occupied.
 
 
 
-    def __init__(self, id=None, n=None, k=None, particle1=None, particle2=None):
+    def __init__(self):
 
         """
-        The Atom class constructor.
+        The Particle class constructor.
 
         Parameters:
 
@@ -29,13 +27,34 @@ class Atom:
         Returns: None
 
         """
-        if (particle1 and particle2):
-            self.rbn = rbn.RBN(rbn1=particle1.rbn, rbn2=particle2.rbn)
-            self.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
-        else:
-            self.rbn = rbn.RBN(n, k, 0, rbn.NodeSpace.getInstance())
-            self.id = id
+    
+    @classmethod
+    def compose(cls, particle1, particle2):
+        """
+        The Particle factory method.
 
+        Parameters:
+
+        Two particles from which to create the composite.
+
+        Returns: The new composite particle.
+
+        """
+        obj = cls()
+        obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn)
+        obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
+        obj.initialize()
+        return obj
+
+    @classmethod
+    def new(cls, n, k, id):
+        obj = cls()
+        obj.rbn = rbn.RBN.new(n, k, 0, rbn.NodeSpace.getInstance())
+        obj.id = id
+        obj.initialize()
+        return obj
+
+    def initialize(self):
         self.ILs = self._calculate_interaction_lists()
         # self.spike_values = self.krastev_spikes()
 
@@ -53,7 +72,7 @@ class Atom:
             interaction_site.spike_value = self.spike_values[i]
             interaction_site.spike_type = self.spike_types[i]
             self.interaction_sites.append(interaction_site)
-            
+
     def __str__(self):
         s = 'Atom ' + str(self.id) + '\n'
         ILs_idxs = [[node.loc_idx for node in IL] for IL in self.ILs] 
@@ -172,13 +191,16 @@ class InterationSite:
         s += "Spike type: " + str(self.spike_type) + "\n"
         return s
 
+    def __len__(self):
+        return len(self.nodelist)
+
 
 if __name__ == "__main__":
     print("Atom.py invoked as script...")
     rbn.NodeSpace(1000)
-    a = Atom(0, 12, 2)
-    b = Atom(1, 12, 2)
-    c = Atom(particle1=a, particle2=b)
+    a = Particle.new(12, 2, 0)
+    b = Particle.new(12, 2, 0)
+    c = Particle.compose(particle1=a, particle2=b)
     print(a)
     print(b)
     print(c)
