@@ -83,8 +83,8 @@ class RBN:
         obj = cls()
         obj.k = rbn1.k
 
-        assert(rbn1.nodespace == rbn2.nodespace)
-        obj.nodespace = rbn1.nodespace
+        # assert(rbn1.nodespace == rbn2.nodespace)
+        # obj.nodespace = rbn1.nodespace
 
         obj.nodes = rbn1.nodes + rbn2.nodes
         for idx, node in enumerate(obj.nodes):
@@ -110,6 +110,46 @@ class RBN:
             boolean_function_lookup = boolean_function_lookup + 2**i * currentstates[other_node.loc_idx]
         return 1 if node.bool_func >> boolean_function_lookup & 1 else 0
     
+    def _switch_edge(self, from_node1, to_node1, from_node2, to_node2):
+        """
+        In an RBN in which there is an edge from from_node1 to to_node1 and from from_node2 to
+        to_node2, this method creates an edge from from_node1 to to_node2 and from from_node2 
+        to to_node1, removing the original edges.
+
+        Parameters:
+
+        from_node1
+        to_node1
+        from_node2
+        to_node2
+        """
+       
+        # This method preserves k and so doesn't corrupt the RBN and can be called from outside the class.
+
+        # Assert that the nodes are where they should be to start with.
+        assert(from_node1 in to_node1.in_edges)
+        assert(to_node1 in from_node1.out_edges)
+        assert(from_node2 in to_node2.in_edges)
+        assert(to_node2 in from_node2.out_edges)
+
+        # Add nodes to the corresponding in_edges and out_edges lists
+        to_node1.in_edges.insert(to_node1.index(from_node1), from_node2)
+        to_node2.in_edges.insert(to_node2.index(from_node2), from_node1)
+        from_node1.out_edges.insert(from_node1.out_edges(to_node1), to_node2)
+        from_node2.out_edges.insert(from_node2.out_edges(to_node2), to_node1)
+
+        # Remove nodes from the corresponding in_edges and out_edges lists
+        to_node1.in_edges.remove(from_node1)
+        to_node2.in_edges.remove(from_node2)
+        from_node1.out_edges.remove(to_node1)
+        from_node2.out_edges.remove(to_node2)
+
+        # Assert that the nodes are where they should be to start with.
+        assert(from_node1 in to_node2.in_edges)
+        assert(to_node1 in from_node2.out_edges)
+        assert(from_node2 in to_node1.in_edges)
+        assert(to_node2 in from_node1.out_edges)
+
     def _getcurrentstate(self, node):
         return self.nodespace[RBN.offset + node.loc_idx]
 
@@ -154,7 +194,7 @@ class RBN:
             basinstring += str(count) + " " + str(state) + linesep
         return basinstring
 
-    def summarystring(self):
+    def summarystring(self, verbose=False):
         """
         Returns a string representation of the RBN containing N, K, boolean functions, basin, attractor and
         a "next node state" check to show that the attractor is correct.
@@ -165,10 +205,9 @@ class RBN:
         """
         summarystring = ""
         summarystring += "N=" + str(self.n) + " K=" + str(self.k) + linesep
-        summarystring += "Boolean functions:" + linesep
-        # Ensure that the boolean functions are all 2**k bits long.
-        formatstring = '#0' + str(2**self.k + 2) + 'b'
-        summarystring += str([format(node.bool_func, formatstring) for node in self.nodes]) + linesep
+        for node in self.nodes:
+            summarystring += str(node) + linesep
+        summarystring += linesep
         summarystring += "Basin:" + linesep
         summarystring += self.basinstring() + linesep
         summarystring += "Attractor:" + linesep
@@ -181,9 +220,12 @@ class RBNNode:
     """
     Represents a node within an RBN.
     """
-    def __init__(self, loc_idx, glob_idx, bool_func=0):
+    glob_idx = 0
+
+    def __init__(self, loc_idx, id, bool_func=0):
         self.loc_idx = loc_idx
-        self.glob_idx = glob_idx
+        self.id = RBNNode.glob_idx
+        RBNNode.glob_idx += 1
         # Need to sort inward edges in ascending order for boolean function lookup to work properly.
         self.in_edges = []
         self.out_edges = []
@@ -191,15 +233,12 @@ class RBNNode:
         pass
 
     def __str__(self):
-        return str(self.loc_idx)
+        formatstring = '#0' + str(2**len(self.in_edges) + 2) + 'b'
+        return 'id:{:2}'.format(self.id, a=2) + ' bf: ' + format(self.bool_func, formatstring) + ' in:' + str([node.id for node in self.in_edges]) + ' out:' + str([node.id for node in self.out_edges])
 
 if __name__ == "__main__":
     print("Hello rbn...")
     NodeSpace(100)
     a = RBN.new(12, 2, 0, NodeSpace.getInstance())
-    b = RBN.new(12, 2, 0, NodeSpace.getInstance())
     print(a.summarystring())
-    print(b.summarystring())
-    c = RBN.compose(rbn1=a, rbn2=b)
-    print(c.summarystring())
 

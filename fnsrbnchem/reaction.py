@@ -48,8 +48,20 @@ def sitescanbond(site1, site2):
         return False
     
 def bond(p1, p2, site1, site2):
+    # new RBN
+
+    # new Interaction_Site
+    # * Crossing over two different interaction sites doesn't produce a new interation
+    # * site, so this shouldn't be a class method in the Interaction_Site class. In fact,
+    # * since a new composite cannot be created without knowing which interaction sites
+    # * are involved, the crossing over must be part of the bonding of a composite. 
+
+
+
+
     # Do the edge swaps between the nodelists in site1 and site2
-    # for i in range(min(len(site1)))
+    for i in range(min(len(site1), len(site2))):
+        pass
 
 
     # Update inedges and out_edges: will these change?
@@ -57,4 +69,3 @@ def bond(p1, p2, site1, site2):
     # Recalculate interaction sites
     # Important to remember that p1 and p2 are not lost by the bonding process
     # since they will be saved in the binary tree.
-    pass

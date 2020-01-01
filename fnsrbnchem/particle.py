@@ -11,8 +11,6 @@ class Particle:
 
     # TODO  Need a way to determine which of the ILs are free to bond and which are occupied.
 
-
-
     def __init__(self):
 
         """
@@ -29,7 +27,7 @@ class Particle:
         """
     
     @classmethod
-    def compose(cls, particle1, particle2):
+    def compose(cls, particle1, particle2, int_site1, int_site2):
         """
         The Particle factory method.
 
@@ -43,7 +41,20 @@ class Particle:
         obj = cls()
         obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn)
         obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
-        obj.initialize()
+
+        # The nodes at the odd indices of the interaction sites are the ones we need
+        # to swap between the .
+        for index in [i for i in range(min(len(int_site1, int_site2))) if i % 2 == 1]:
+            pass
+            # node1 = int_site1[index]
+            # node2 = int_site2[index]
+            # The node in int_site1 that was going into node1 should now go into node2.
+            # The node in int_site1 that had an incoming node from node1 should now have
+            # an incoming node from node2.
+            # The node in int_site2 that was going into node2 should now go into node1.
+            # The node in int_site2 that had an incoming node from node2 should now have
+            # an incoming node from node1.
+        obj._initialize()
         return obj
 
     @classmethod
@@ -51,11 +62,23 @@ class Particle:
         obj = cls()
         obj.rbn = rbn.RBN.new(n, k, 0, rbn.NodeSpace.getInstance())
         obj.id = id
-        obj.initialize()
+        obj._initialize()
         return obj
 
-    def initialize(self):
-        self.ILs = self._calculate_interaction_lists()
+    @classmethod
+    def fromRBN(cls, rbn, id):
+        obj = cls()
+        obj.rbn = rbn
+        obj.id = id
+        obj._initialize()
+        return obj
+
+    def _initialize(self):
+        """
+        Initialization of spikes and interaction sites which is required both for new particles
+        and composite particles.
+        """
+        self.ILs = self._calculate_interaction_sites()
         # self.spike_values = self.krastev_spikes()
 
         self.spike_values, self.spike_types = self._watson_spikes()
@@ -67,17 +90,18 @@ class Particle:
         # TODO of the object approach is that the interaction site can be marked as available/unavailable.
         self.interaction_sites = []
         for i, _ in enumerate(self.ILs):
-            interaction_site = InterationSite()
+            interaction_site = Interation_Site()
             interaction_site.nodelist = self.ILs[i]
             interaction_site.spike_value = self.spike_values[i]
             interaction_site.spike_type = self.spike_types[i]
             self.interaction_sites.append(interaction_site)
 
     def __str__(self):
-        s = 'Atom ' + str(self.id) + '\n'
-        ILs_idxs = [[node.loc_idx for node in IL] for IL in self.ILs] 
-        s += str(ILs_idxs) + '\n'
-        s += str(self.spike_values) + '\n'
+        s = 'Particle ' + str(self.id) + '\n'
+        ILs_idxs = [[node.id for node in IL] for IL in self.ILs] 
+        s += 'Interaction sites: ' + str(ILs_idxs) + '\n'
+        s += 'Spike values: ' +str(self.spike_values) + '\n'
+        s += 'Spike types: ' +str(self.spike_types) + '\n'
         return s
 
     def _krastev_spikes(self):
@@ -136,7 +160,7 @@ class Particle:
 
         return spike_values, spike_types
 
-    def _calculate_interaction_lists(self):
+    def _calculate_interaction_sites(self):
         """
         Creates and calculates the interaction list for an Atom.
 
@@ -176,13 +200,13 @@ class Particle:
         #   i ++
         # end
 
-class InterationSite:
+class Interation_Site:
     def __init__(self):
         self.available = True
         self.nodelist = []
         self.spike_value = None
         self.spike_type = None
-
+ 
     def __str__(self):
         s = ""
         s += "Available: " + str(self.available) + "\n"
@@ -196,13 +220,7 @@ class InterationSite:
 
 
 if __name__ == "__main__":
-    print("Atom.py invoked as script...")
+    print("particle.py invoked as script...")
     rbn.NodeSpace(1000)
     a = Particle.new(12, 2, 0)
-    b = Particle.new(12, 2, 0)
-    c = Particle.compose(particle1=a, particle2=b)
     print(a)
-    print(b)
-    print(c)
-    pass
-
