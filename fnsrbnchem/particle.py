@@ -42,25 +42,19 @@ class Particle:
         obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn)
         obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
 
-        # The nodes at the odd indices of the interaction sites are the ones we need
-        # to swap between the .
-        for index in [i for i in range(min(len(int_site1, int_site2))) if i % 2 == 1]:
-            pass
-            # node1 = int_site1[index]
-            # node2 = int_site2[index]
-            # The node in int_site1 that was going into node1 should now go into node2.
-            # The node in int_site1 that had an incoming node from node1 should now have
-            # an incoming node from node2.
-            # The node in int_site2 that was going into node2 should now go into node1.
-            # The node in int_site2 that had an incoming node from node2 should now have
-            # an incoming node from node1.
-        obj._initialize()
+        # Find the nodes at the odd indices running up to the length of the shorter of the two interaction sites involved in the bond, then switch the edges:
+
+        # 1 - 2   becomes    1 - 4
+        # 3 - 4              3 - 2
+        for index in [i for i in range(1, min(len(int_site1), len(int_site2)))]:
+            obj.rbn._switch_edges(int_site1[index], int_site1[index-1], int_site2[index], int_site2[index-1])
+        # obj._initialize()
         return obj
 
     @classmethod
     def new(cls, n, k, id):
         obj = cls()
-        obj.rbn = rbn.RBN.new(n, k, 0, rbn.NodeSpace.getInstance())
+        obj.rbn = rbn.RBN.new(n, k, rbn.NodeSpace.getInstance())
         obj.id = id
         obj._initialize()
         return obj
@@ -90,10 +84,7 @@ class Particle:
         # TODO of the object approach is that the interaction site can be marked as available/unavailable.
         self.interaction_sites = []
         for i, _ in enumerate(self.ILs):
-            interaction_site = Interation_Site()
-            interaction_site.nodelist = self.ILs[i]
-            interaction_site.spike_value = self.spike_values[i]
-            interaction_site.spike_type = self.spike_types[i]
+            interaction_site = Interation_Site(self.ILs[i], self.spike_values[i], self.spike_types[i])
             self.interaction_sites.append(interaction_site)
 
     def __str__(self):
@@ -201,22 +192,25 @@ class Particle:
         # end
 
 class Interation_Site:
-    def __init__(self):
+    def __init__(self, nodes, spike_value, spike_type):
         self.available = True
-        self.nodelist = []
-        self.spike_value = None
-        self.spike_type = None
+        self._nodes = nodes
+        self.spike_value = spike_value
+        self.spike_type = spike_type
  
     def __str__(self):
         s = ""
         s += "Available: " + str(self.available) + "\n"
-        s += "Nodelist: " + str(list(map(str, self.nodelist))) + "\n"
+        s += "Nodes: " + str(list(map(str, self._nodes))) + "\n"
         s += "Spike value: " + str(self.spike_value) + "\n"
         s += "Spike type: " + str(self.spike_type) + "\n"
         return s
 
     def __len__(self):
-        return len(self.nodelist)
+        return len(self._nodes)
+
+    def __getitem__(self, itemnumber):
+        return self._nodes[itemnumber]
 
 
 if __name__ == "__main__":

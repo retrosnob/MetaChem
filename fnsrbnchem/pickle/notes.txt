@@ -1,0 +1,2 @@
+keepc and keepd produce remain bipartite even after the bond. Is this just fluke?
+No. For some reason temp.png wasn't updating.

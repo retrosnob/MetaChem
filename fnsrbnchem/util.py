@@ -29,7 +29,7 @@ def create_pickled_particle(the_particle=None, filename=None):
     print(str(the_rbn.summarystring()))
     print(str(the_particle))
     if filename is None:
-        filename = str(datetime.datetime.now()).split('.')[0].replace(' ', '@')
+        filename = str(datetime.datetime.now()).replace(' ', '@')
     with open(FILEPATH + filename + '.pickle', 'wb') as f:
         pickle.dump(the_particle, f, pickle.HIGHEST_PROTOCOL)
     with open(FILEPATH + filename + '.txt', 'w') as f:

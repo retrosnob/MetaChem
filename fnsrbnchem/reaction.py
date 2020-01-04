@@ -23,11 +23,11 @@ def particlescanbond(p1, p2):
             for site2 in p2.interaction_sites:
                 if site2.available:
                     # Test the bonding criteria
-                    if sitescanbond(site1, site2):
+                    if _sitescanbond(site1, site2):
                         return site1, site2
     return (None, None)
 
-def sitescanbond(site1, site2):
+def _sitescanbond(site1, site2):
     """
     Checks if two interaction sites can bond.
 
@@ -37,35 +37,16 @@ def sitescanbond(site1, site2):
 
     """
     # * Watson rules for now
-    diff = abs(len(site1.nodelist) + len(site2.nodelist))
-    spike_sum = site1.spike_type + site2.spike_type
-
-    if ((diff == 0 and site1.spike_type == 1 and site2.spike_type == 1)
-    or (diff <= 1 and spike_sum > 2 and spike_sum < 6)
-    or (diff <= 2 and site1.spike_type == 3 or site2.spike_type == 3)):
-        return True
-    else:
+    if len(site1) < 2 or len(site2) < 2:
         return False
-    
-def bond(p1, p2, site1, site2):
-    # new RBN
+    else:
+        diff = abs(len(site1) - len(site2))
+        spike_sum = site1.spike_type + site2.spike_type
+        print("diff: " + str(diff))
 
-    # new Interaction_Site
-    # * Crossing over two different interaction sites doesn't produce a new interation
-    # * site, so this shouldn't be a class method in the Interaction_Site class. In fact,
-    # * since a new composite cannot be created without knowing which interaction sites
-    # * are involved, the crossing over must be part of the bonding of a composite. 
-
-
-
-
-    # Do the edge swaps between the nodelists in site1 and site2
-    for i in range(min(len(site1), len(site2))):
-        pass
-
-
-    # Update inedges and out_edges: will these change?
-    # What do we do about local indexes?
-    # Recalculate interaction sites
-    # Important to remember that p1 and p2 are not lost by the bonding process
-    # since they will be saved in the binary tree.
+        if ((diff == 0 and site1.spike_type == 1 and site2.spike_type == 1)
+        or (diff <= 1 and spike_sum > 2 and spike_sum < 6)
+        or (diff <= 2 and site1.spike_type == 3 or site2.spike_type == 3)):
+            return True
+        else:
+            return False

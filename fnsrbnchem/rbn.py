@@ -41,16 +41,13 @@ class RBN:
         pass
 
     @classmethod
-    def new(cls, n, k, offset, nodespace):
+    def new(cls, n, k, nodespace):
         obj = cls()
         obj.k = k
-        obj.offset = offset # This doesn't make sense. The nodes should know their place in the nodespace, that's all.
         obj.n = n
         obj.nodespace = nodespace
         # Create new node objects.
-        obj.nodes = [RBNNode(i, offset+i) for i in list(range(n))]
-        # ! Note that the offset+1 method of calculating the index in the nodespace won't work
-        # ! after swaps have taken place, so this can only be used in the constructor call.         
+        obj.nodes = [RBNNode(i) for i in list(range(n))]
         for node in obj.nodes:
             # Make a list of all other nodes but this one and select k of them at random from which to add
             # to incoming edges.
@@ -83,8 +80,11 @@ class RBN:
         obj = cls()
         obj.k = rbn1.k
 
+        # ! Doesn't work when rbns unpickled:
         # assert(rbn1.nodespace == rbn2.nodespace)
-        # obj.nodespace = rbn1.nodespace
+
+
+        obj.nodespace = rbn1.nodespace
 
         obj.nodes = rbn1.nodes + rbn2.nodes
         for idx, node in enumerate(obj.nodes):
@@ -95,7 +95,7 @@ class RBN:
 
     def getnextstate(self, node, currentstates=None):
         """
-        Returns a list of the next state of node assuming the current states are as provide in the
+        Returns a list of the next state of node assuming the current states are as provided in the
         currentstates list argument. 
         If the currentstates argument is not supplied then the actual current states are used.
         """
@@ -110,11 +110,13 @@ class RBN:
             boolean_function_lookup = boolean_function_lookup + 2**i * currentstates[other_node.loc_idx]
         return 1 if node.bool_func >> boolean_function_lookup & 1 else 0
     
-    def _switch_edge(self, from_node1, to_node1, from_node2, to_node2):
+    def _switch_edges(self, from_node1, to_node1, from_node2, to_node2):
         """
         In an RBN in which there is an edge from from_node1 to to_node1 and from from_node2 to
         to_node2, this method creates an edge from from_node1 to to_node2 and from from_node2 
         to to_node1, removing the original edges.
+
+        It is important to remember that this method changes in_edges and out_edges, not any interaction site. Interaction sites should be recalculated after a called to switch_edges.
 
         Parameters:
 
@@ -133,10 +135,10 @@ class RBN:
         assert(to_node2 in from_node2.out_edges)
 
         # Add nodes to the corresponding in_edges and out_edges lists
-        to_node1.in_edges.insert(to_node1.index(from_node1), from_node2)
-        to_node2.in_edges.insert(to_node2.index(from_node2), from_node1)
-        from_node1.out_edges.insert(from_node1.out_edges(to_node1), to_node2)
-        from_node2.out_edges.insert(from_node2.out_edges(to_node2), to_node1)
+        to_node1.in_edges.insert(to_node1.in_edges.index(from_node1), from_node2)
+        to_node2.in_edges.insert(to_node2.in_edges.index(from_node2), from_node1)
+        from_node1.out_edges.insert(from_node1.out_edges.index(to_node1), to_node2)
+        from_node2.out_edges.insert(from_node2.out_edges.index(to_node2), to_node1)
 
         # Remove nodes from the corresponding in_edges and out_edges lists
         to_node1.in_edges.remove(from_node1)
@@ -222,7 +224,7 @@ class RBNNode:
     """
     glob_idx = 0
 
-    def __init__(self, loc_idx, id, bool_func=0):
+    def __init__(self, loc_idx, bool_func=0):
         self.loc_idx = loc_idx
         self.id = RBNNode.glob_idx
         RBNNode.glob_idx += 1
