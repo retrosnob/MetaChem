@@ -10,7 +10,7 @@ import math
 import particle
 import rbn
 
-def visualize(particle):
+def visualize(particle, filename='temp.png'):
     """
     Set the scatter plot to have axes -100 up to 100 for both x and y.
     Calculate the angle between nodes as 2pi/N. Calculate the x, y coord
@@ -41,7 +41,7 @@ def visualize(particle):
 
     plt.axis('off')
     # For some reason I can't use plt.show() because matplotlib thinks I'm headless.
-    fig.savefig('temp.png')
+    fig.savefig(filename)
 
 if __name__ == "__main__":
     print("viz.py invoked as script...")

@@ -42,10 +42,11 @@ class Particle:
         obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn)
         obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
 
-        # Find the nodes at the odd indices running up to the length of the shorter of the two interaction sites involved in the bond, then switch the edges:
+        # THIS IS WHERE BONDING TAKES PLACE
+        # Find the nodes at the odd indices running up to the length of the shorter of the two interaction sites involved in the bond, then switch the edges, e.g in _switch_edges(2, 1, 4, 3):
 
-        # 1 - 2   becomes    1 - 4
-        # 3 - 4              3 - 2
+        # 1 <- 2   becomes    1 <- 4
+        # 3 <- 4              3 <- 2
         for index in [i for i in range(1, min(len(int_site1), len(int_site2)))]:
             obj.rbn._switch_edges(int_site1[index], int_site1[index-1], int_site2[index], int_site2[index-1])
         # obj._initialize()
