@@ -4,8 +4,6 @@ import reaction
 import viz
 import util
 
-rbn.NodeSpace(100)
-
 def savebondingpair(a, b):
     # Pickle the particles here
     if not isinstance(a, particle.Particle) or not isinstance(b, particle.Particle):
@@ -54,6 +52,7 @@ def test2():
     print(b_site)
     c = particle.Particle.compose(particle1=a, particle2=b, int_site1=a_site, int_site2=b_site)
     print(c.rbn.summarystring())
+    print(c)
     viz.visualize(c)
 
 

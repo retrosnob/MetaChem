@@ -38,28 +38,45 @@ class Particle:
         Returns: The new composite particle.
 
         """
+        # Creates a new particle object.
         obj = cls()
-        obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn)
+        # This creates a new underlying RBN by performing the edge swaps according to the interaction site nodes list.
+        # It also recalculates the attractor.
+        obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn, nodes1=int_site1.nodes, nodes2=int_site2.nodes)       
         obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
 
-        # THIS IS WHERE BONDING TAKES PLACE
-        # Find the nodes at the odd indices running up to the length of the shorter of the two interaction sites involved in the bond, then switch the edges, e.g in _switch_edges(2, 1, 4, 3):
+        # But what to do we do with InteractionSites? They have to be inherited from the parent particles... ?
+        # Concatenate them?
 
-        # 1 <- 2   becomes    1 <- 4
-        # 3 <- 4              3 <- 2
-        for index in [i for i in range(1, min(len(int_site1), len(int_site2)))]:
-            obj.rbn._switch_edges(int_site1[index], int_site1[index-1], int_site2[index], int_site2[index-1])
-        # obj._initialize()
+        # First set the bonded interaction sites to unavailable for further bonding.
+        int_site1.available = False
+        int_site2.available = False
+
+        # ! All interaction_sites are inherited by the composite particle but don't forget that the interaction
+        # ! site objects are not changed by the bonding (after all they are not recalculated afterwards), 
+        # ! only the edges of the RBN (and hence the attractor) are.
+        # ! This shouldn't affect anything (?) because the bonded interaction sites can't take part in any more
+        # ! bonds anyway.... Check this.
+        obj.interaction_sites = particle1.interaction_sites + particle2.interaction_sites
+
+        obj._initialize()
         return obj
 
     @classmethod
     def new(cls, n, k, id):
         obj = cls()
-        obj.rbn = rbn.RBN.new(n, k, rbn.NodeSpace.getInstance())
+        obj.rbn = rbn.RBN.new(n, k)
         obj.id = id
+        # Setting the interaction lists is only ever done once
+        # obj.interaction_lists = obj._calculate_interaction_lists()
+        obj.interaction_sites = []
+        for site in obj._calculate_interaction_lists():
+            interaction_site = Interation_Site(site, None, None)
+            obj.interaction_sites.append(interaction_site)
         obj._initialize()
         return obj
 
+    """
     @classmethod
     def fromRBN(cls, rbn, id):
         obj = cls()
@@ -67,31 +84,27 @@ class Particle:
         obj.id = id
         obj._initialize()
         return obj
+    """
 
     def _initialize(self):
         """
-        Initialization of spikes and interaction sites which is required both for new particles
+        Initialization of spikes which is required both for new particles
         and composite particles.
         """
-        self.ILs = self._calculate_interaction_sites()
-        # self.spike_values = self.krastev_spikes()
-
+        
+        # The attractor must have been calculated by this point.
         self.spike_values, self.spike_types = self._watson_spikes()
-        assert(len(self.ILs) == len(self.spike_values) == len(self.spike_types))
+        assert(len(self.interaction_sites) == len(self.spike_values) == len(self.spike_types))
 
-        # The current interaction site method return parallel lists. Here we convert those
-        # into a single list of InteractionSite objects. 
-        # TODO Decide if parallel lists or single list of objects is best and tidy up. One advantage
-        # TODO of the object approach is that the interaction site can be marked as available/unavailable.
-        self.interaction_sites = []
-        for i, _ in enumerate(self.ILs):
-            interaction_site = Interation_Site(self.ILs[i], self.spike_values[i], self.spike_types[i])
-            self.interaction_sites.append(interaction_site)
+        # We have the InteractionSite objects but we need to add the spike values and types.
+        for i, site in enumerate(self.interaction_sites):
+            site.spike_value = self.spike_values[i]
+            site.spike_type = self.spike_types[i]
 
     def __str__(self):
         s = 'Particle ' + str(self.id) + '\n'
-        ILs_idxs = [[node.id for node in IL] for IL in self.ILs] 
-        s += 'Interaction sites: ' + str(ILs_idxs) + '\n'
+        site_idxs = [[node.id for node in site] for site in self.interaction_sites] 
+        s += 'Interaction sites: ' + str(site_idxs) + '\n'
         s += 'Spike values: ' +str(self.spike_values) + '\n'
         s += 'Spike types: ' +str(self.spike_types) + '\n'
         return s
@@ -118,9 +131,9 @@ class Particle:
         # We now have the spike values for each node in the IL. To get the spikes for the whole IL, we have 
         # to sum them up:
         # Get the ILs as lists of local_index values rather than objects.
-        ILs_idxs = [[node.loc_idx for node in IL] for IL in self.ILs] 
+        site_idxs = [[node.loc_idx for node in site] for site in self.interaction_sites] 
         # Sum the node spikes referenced by the local_index values of the ILs.
-        return list(map(sum, [[node_spikes[i] for i in lst] for lst in ILs_idxs]))
+        return list(map(sum, [[node_spikes[i] for i in lst] for lst in site_idxs]))
 
     def _watson_spikes(self):
         # Create lists such that:
@@ -132,18 +145,18 @@ class Particle:
 
         spike_values = []
         spike_types = []
-        for IL in self.ILs:
+        for site in self.interaction_sites:
             spike_value = 0
             # Set the spike type on the basis of the IL length.
-            if len(IL) >= 10:
+            if len(site) >= 10:
                 spike_types.append(3)
-            elif len(IL) >= 5:
+            elif len(site) >= 5:
                 spike_types.append(2)
             else:
                 spike_types.append(1)
 
             # Calculate the spike value for this IL based on whether/how nodes are frozen.
-            for node in IL:
+            for node in site:
                 if frozen_true[node.loc_idx]:
                     spike_value += 1
                 elif frozen_false[node.loc_idx]:
@@ -152,7 +165,7 @@ class Particle:
 
         return spike_values, spike_types
 
-    def _calculate_interaction_sites(self):
+    def _calculate_interaction_lists(self):
         """
         Creates and calculates the interaction list for an Atom.
 
@@ -160,23 +173,23 @@ class Particle:
           
         ILs (List of lists of RBNNode objects): A list of the interaction lists for this Atom.
         """
-        ILs = []
+        interaction_lists = []
         # Sort nodes in ascending order of influence.
         sortednodes = sorted([node for node in self.rbn.nodes], key = lambda node: len(node.out_edges))
         while sortednodes:
             node = sortednodes.pop(0)
-            IL = []
-            IL.append(node)
+            site = []
+            site.append(node)
             nextnodes = [nextnode for nextnode in node.in_edges if nextnode in sortednodes]
             while nextnodes:
                 nextnode = nextnodes[0]
                 sortednodes.remove(nextnode)
-                IL.append(nextnode)
+                site.append(nextnode)
                 node = nextnode
                 nextnodes = [nextnode for nextnode in node.in_edges if nextnode in sortednodes]
-            ILs.append(IL)
+            interaction_lists.append(site)
         
-        return ILs
+        return interaction_lists
 
         # Create interaction lists
         # Sort nodes ascending on number of outgoing edges
@@ -195,27 +208,27 @@ class Particle:
 class Interation_Site:
     def __init__(self, nodes, spike_value, spike_type):
         self.available = True
-        self._nodes = nodes
+        self.nodes = nodes
         self.spike_value = spike_value
         self.spike_type = spike_type
  
     def __str__(self):
         s = ""
         s += "Available: " + str(self.available) + "\n"
-        s += "Nodes: " + str(list(map(str, self._nodes))) + "\n"
+        s += "Nodes: " + str(list(map(str, self.nodes))) + "\n"
         s += "Spike value: " + str(self.spike_value) + "\n"
         s += "Spike type: " + str(self.spike_type) + "\n"
         return s
 
     def __len__(self):
-        return len(self._nodes)
+        return len(self.nodes)
 
     def __getitem__(self, itemnumber):
-        return self._nodes[itemnumber]
+        return self.nodes[itemnumber]
 
 
 if __name__ == "__main__":
     print("particle.py invoked as script...")
-    rbn.NodeSpace(1000)
+    # rbn.NodeSpace(1000)
     a = Particle.new(12, 2, 0)
     print(a)

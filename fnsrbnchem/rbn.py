@@ -1,51 +1,17 @@
 from os import linesep
-from bitarray import bitarray
 import array
 import random
 
-"""
-The offset + id method of looking up the node value won't work after nodes have been swapped.
-"""
-
-class NodeSpace:
-    """
-    A singleton class for storing all node values in any RBN-based AChem. The RBN is specified
-    by an array of indexes into this node space.
-    """
-    __instance = None
-
-    @staticmethod
-    def getInstance():
-        if NodeSpace.__instance == None:
-            raise Exception("Node space has not been constructed yet.")
-        else:
-            return NodeSpace.__instance
-    
-    def __init__(self, size):
-        if NodeSpace.__instance != None:
-            raise Exception("Cannot instantiate more than one NodeSpace.")
-        else:
-            self.arr = bitarray(size)
-            NodeSpace.__instance = self
-
-    def __getitem__(self, index):
-        return 1 if self.arr[index] else 0
-
-    def __len__(self):
-        return len(self.arr)
-
 class RBN:
-    offset = 0 # (static) The offset into the nodespace bitarray.
 
     def __init__(self):
         pass
 
     @classmethod
-    def new(cls, n, k, nodespace):
+    def new(cls, n, k):
         obj = cls()
         obj.k = k
         obj.n = n
-        obj.nodespace = nodespace
         # Create new node objects.
         obj.nodes = [RBNNode(i) for i in list(range(n))]
         for node in obj.nodes:
@@ -64,32 +30,38 @@ class RBN:
         return obj
 
     @classmethod
-    def compose(cls, rbn1, rbn2):
+    def compose(cls, rbn1, rbn2, nodes1, nodes2):
         # What will the new RBN look like?
         # We know the inward and outward edges of each.
         # There must be a concept of some edge swaps to do.
         # Concatenate the nodes lists and resequence then from 0 to n1+n2.
         # k stays the same; the final n becomes n1+n2.
-        # We don't need to worry about decomposing them because the binary tree does that.
-        # What happens with the boolean functions? Nothing. They don't depend on n. Phew.
-        # Recalculate the basin and attractor.
-        # The index into the nodespace (if implemented) shouldn't change.
-        # Having node objects was an excellent idea!
+
         assert(rbn1.k == rbn2.k) # An assumption at the moment but could be relaxed later.
 
         obj = cls()
         obj.k = rbn1.k
 
-        # ! Doesn't work when rbns unpickled:
-        # assert(rbn1.nodespace == rbn2.nodespace)
-
-
-        obj.nodespace = rbn1.nodespace
-
         obj.nodes = rbn1.nodes + rbn2.nodes
         for idx, node in enumerate(obj.nodes):
             node.loc_idx = idx
         obj.n = rbn1.n + rbn2.n
+        # Edge swaps should happen here?? At the moment they are done in the particle.
+        # It's true that RBNs shouldn't know about interaction lists, but it's fine for
+        # an RBN to be able to create a new RBN from two separate RBNs and a set of 
+        # edges to swap.
+
+        # THIS IS WHERE BONDING TAKES PLACE
+        # Find the nodes at the odd indices running up to the length of the shorter of the two interaction sites involved in the bond, then switch the edges, e.g in _switch_edges(2, 1, 4, 3):
+
+        # 1 <- 2   becomes    1 <- 4
+        # 3 <- 4              3 <- 2
+        for index in [i for i in range(1, min(len(nodes1), len(nodes2)))]:
+            obj._switch_edges(nodes1[index], nodes1[index-1], nodes2[index], nodes2[index-1])
+        # obj._initialize()
+
+        # We now have a new RBN object with edges between them as defined by the edge swaps specified by the interaction lists.
+        # Need to calculate the new cycle and return it to the particle, where new spike details will be calculated.
         obj.basin, obj.attractor = obj._calculate_cycle()
         return obj
 
@@ -116,7 +88,9 @@ class RBN:
         to_node2, this method creates an edge from from_node1 to to_node2 and from from_node2 
         to to_node1, removing the original edges.
 
-        It is important to remember that this method changes in_edges and out_edges, not any interaction site. Interaction sites should be recalculated after a called to switch_edges.
+        It is important to remember that this method changes in_edges and out_edges, not any interaction site. 
+        Interaction sites don't change unless they are part of a (temporary) bond. 
+        Spike details should be recalculated after a called to switch_edges.
 
         Parameters:
 
@@ -153,7 +127,10 @@ class RBN:
         assert(to_node2 in from_node1.out_edges)
 
     def _getcurrentstate(self, node):
-        return self.nodespace[RBN.offset + node.loc_idx]
+        # return self.nodespace[RBN.offset + node.loc_idx]
+        # This is only used to get the initial state, which is set to zero. Needs to be cleaned up.
+        # The node should carry its own state, presumably, with an initial value of zero.
+        return 0
 
     def _getcurrentstates(self):
         return [self._getcurrentstate(node) for node in self.nodes]
@@ -240,7 +217,8 @@ class RBNNode:
 
 if __name__ == "__main__":
     print("Hello rbn...")
-    NodeSpace(100)
-    a = RBN.new(12, 2, 0, NodeSpace.getInstance())
+    # NodeSpace(100)
+    # a = RBN.new(12, 2, NodeSpace.getInstance())
+    a = RBN.new(12, 2)
     print(a.summarystring())
 
