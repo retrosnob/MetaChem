@@ -3,12 +3,14 @@ import array
 import random
 
 class RBN:
+    N = 12
+    K = 2
 
     def __init__(self):
         pass
 
     @classmethod
-    def new(cls, n, k):
+    def new(cls, n=N, k=K):
         obj = cls()
         obj.k = k
         obj.n = n
@@ -51,18 +53,8 @@ class RBN:
         # an RBN to be able to create a new RBN from two separate RBNs and a set of 
         # edges to swap.
 
-        # THIS IS WHERE BONDING TAKES PLACE
-        # Find the nodes at the odd indices running up to the length of the shorter of the two interaction sites involved in the bond, then switch the edges, e.g in _switch_edges(2, 1, 4, 3):
-
-        # 1 <- 2   becomes    1 <- 4
-        # 3 <- 4              3 <- 2
-        for index in [i for i in range(1, min(len(nodes1), len(nodes2)))]:
-            obj._switch_edges(nodes1[index], nodes1[index-1], nodes2[index], nodes2[index-1])
         # obj._initialize()
 
-        # We now have a new RBN object with edges between them as defined by the edge swaps specified by the interaction lists.
-        # Need to calculate the new cycle and return it to the particle, where new spike details will be calculated.
-        obj.basin, obj.attractor = obj._calculate_cycle()
         return obj
 
     def getnextstate(self, node, currentstates=None):
@@ -81,50 +73,6 @@ class RBN:
             # significant bit). Hence our next state will be bit number 2 from the boolean function.
             boolean_function_lookup = boolean_function_lookup + 2**i * currentstates[other_node.loc_idx]
         return 1 if node.bool_func >> boolean_function_lookup & 1 else 0
-    
-    def _switch_edges(self, from_node1, to_node1, from_node2, to_node2):
-        """
-        In an RBN in which there is an edge from from_node1 to to_node1 and from from_node2 to
-        to_node2, this method creates an edge from from_node1 to to_node2 and from from_node2 
-        to to_node1, removing the original edges.
-
-        It is important to remember that this method changes in_edges and out_edges, not any interaction site. 
-        Interaction sites don't change unless they are part of a (temporary) bond. 
-        Spike details should be recalculated after a called to switch_edges.
-
-        Parameters:
-
-        from_node1
-        to_node1
-        from_node2
-        to_node2
-        """
-       
-        # This method preserves k and so doesn't corrupt the RBN and can be called from outside the class.
-
-        # Assert that the nodes are where they should be to start with.
-        assert(from_node1 in to_node1.in_edges)
-        assert(to_node1 in from_node1.out_edges)
-        assert(from_node2 in to_node2.in_edges)
-        assert(to_node2 in from_node2.out_edges)
-
-        # Add nodes to the corresponding in_edges and out_edges lists
-        to_node1.in_edges.insert(to_node1.in_edges.index(from_node1), from_node2)
-        to_node2.in_edges.insert(to_node2.in_edges.index(from_node2), from_node1)
-        from_node1.out_edges.insert(from_node1.out_edges.index(to_node1), to_node2)
-        from_node2.out_edges.insert(from_node2.out_edges.index(to_node2), to_node1)
-
-        # Remove nodes from the corresponding in_edges and out_edges lists
-        to_node1.in_edges.remove(from_node1)
-        to_node2.in_edges.remove(from_node2)
-        from_node1.out_edges.remove(to_node1)
-        from_node2.out_edges.remove(to_node2)
-
-        # Assert that the nodes are where they should be to start with.
-        assert(from_node1 in to_node2.in_edges)
-        assert(to_node1 in from_node2.out_edges)
-        assert(from_node2 in to_node1.in_edges)
-        assert(to_node2 in from_node1.out_edges)
 
     def _getcurrentstate(self, node):
         # return self.nodespace[RBN.offset + node.loc_idx]
@@ -203,7 +151,7 @@ class RBNNode:
 
     def __init__(self, loc_idx, bool_func=0):
         self.loc_idx = loc_idx
-        self.id = RBNNode.glob_idx
+        self.id = f'{RBNNode.glob_idx // RBN.N}.{RBNNode.glob_idx % RBN.N}'
         RBNNode.glob_idx += 1
         # Need to sort inward edges in ascending order for boolean function lookup to work properly.
         self.in_edges = []

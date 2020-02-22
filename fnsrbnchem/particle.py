@@ -42,7 +42,14 @@ class Particle:
         obj = cls()
         # This creates a new underlying RBN by performing the edge swaps according to the interaction site nodes list.
         # It also recalculates the attractor.
-        obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn, nodes1=int_site1.nodes, nodes2=int_site2.nodes)       
+        obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn, nodes1=int_site1.nodes, nodes2=int_site2.nodes)
+        obj.atoms = particle1.atoms + particle2.atoms # This won't work when we decompose.
+        Particle._do_edge_swaps(int_site1, int_site2)
+
+        # We now have a new RBN object with edges between them as defined by the edge swaps specified by the interaction lists.
+        # Need to calculate the new cycle and return it to the particle, where new spike details will be calculated.
+        obj.rbn.basin, obj.rbn.attractor = obj.rbn._calculate_cycle()
+               
         obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
 
         # But what to do we do with InteractionSites? They have to be inherited from the parent particles... ?
@@ -52,11 +59,13 @@ class Particle:
         int_site1.available = False
         int_site2.available = False
 
-        # ! All interaction_sites are inherited by the composite particle but don't forget that the interaction
-        # ! site objects are not changed by the bonding (after all they are not recalculated afterwards), 
-        # ! only the edges of the RBN (and hence the attractor) are.
-        # ! This shouldn't affect anything (?) because the bonded interaction sites can't take part in any more
-        # ! bonds anyway.... Check this.
+        # All interaction_sites are inherited by the composite particle but don't forget that the interaction
+        # site objects are not changed by the bonding (after all they are not recalculated afterwards), 
+        # only the edges of the RBN (and hence the attractor) are.
+        # This shouldn't affect anything (?) because the bonded interaction sites can't take part in any more
+        # bonds anyway.... Check this.
+        # ! This is wrong. You do have to change the interaction sites in order to give them new spike values and test
+        # ! their stability criteria.
         obj.interaction_sites = particle1.interaction_sites + particle2.interaction_sites
 
         obj._initialize()
@@ -67,6 +76,7 @@ class Particle:
         obj = cls()
         obj.rbn = rbn.RBN.new(n, k)
         obj.id = id
+        obj.atoms = 1
         # Setting the interaction lists is only ever done once
         # obj.interaction_lists = obj._calculate_interaction_lists()
         obj.interaction_sites = []
@@ -167,7 +177,8 @@ class Particle:
 
     def _calculate_interaction_lists(self):
         """
-        Creates and calculates the interaction list for an Atom.
+        Creates and calculates the interaction list for an Atom. This should be done only once, when
+        the Atom is created.
 
         Returns:
           
@@ -205,17 +216,104 @@ class Particle:
         #   i ++
         # end
 
+    @staticmethod
+    def _do_edge_swaps(int_site1, int_site2):
+        """
+        Parameters:
+
+        Description:
+        
+        Swaps nodes to form a pair of bonded interaction sites.
+        
+        a <- b <- c <- d <- e
+
+        w <- x <- y <- z
+
+        becomes
+
+        a <- x <- c <- z <- e
+        
+        w <- b <- y <- d
+
+        Parameters:
+
+        int_site_1: The interaction site from one particle.
+        
+        int_site_2: The interaction site from the other particle.
+        """
+        # THIS IS WHERE BONDING TAKES PLACE
+        # Find the nodes at the odd indices running up to the length of the shorter of the two interaction sites involved in the bond, then switch the edges, e.g in _switch_edges(2, 1, 4, 3):
+
+        # 1 <- 2   becomes    1 <- 4
+        # 3 <- 4              3 <- 2
+        for index in [i for i in range(1, min(len(int_site1.nodes), len(int_site2.nodes)))]:
+            # Make appropriate changes to the inward edges lists for each node.s
+            Particle._switch_edges(int_site1.nodes[index], int_site1.nodes[index-1], int_site2.nodes[index], int_site2.nodes[index-1])
+            if (index - 1) % 2 == 1:
+                # Swap every other node in the interaction sites themselves. Have to operate on index - 1 node so as not to 
+                # affect the edge switching.
+                int_site1.nodes[index - 1], int_site2.nodes[index - 1] = int_site2.nodes[index - 1], int_site1.nodes[index - 1] 
+
+        # Need to actually change the interaction sites here but can't change them in the 
+
+    @staticmethod
+    def _switch_edges(from_node1, to_node1, from_node2, to_node2):
+        """
+        In an RBN in which there is an edge from from_node1 to to_node1 and from from_node2 to
+        to_node2, this method creates an edge from from_node1 to to_node2 and from from_node2 
+        to to_node1, removing the original edges.
+
+        It is important to remember that this method changes in_edges and out_edges, not any interaction site. 
+        Interaction sites don't change unless they are part of a (temporary) bond. 
+        Spike details should be recalculated after a called to switch_edges.
+
+        Parameters:
+
+        from_node1
+        to_node1
+        from_node2
+        to_node2
+        """
+       
+        # This method preserves k and so doesn't corrupt the RBN and can be called from outside the class.
+
+        # Assert that the nodes are where they should be to start with.
+        assert(from_node1 in to_node1.in_edges)
+        assert(to_node1 in from_node1.out_edges)
+        assert(from_node2 in to_node2.in_edges)
+        assert(to_node2 in from_node2.out_edges)
+
+        # Add nodes to the corresponding in_edges and out_edges lists
+        to_node1.in_edges.insert(to_node1.in_edges.index(from_node1), from_node2)
+        to_node2.in_edges.insert(to_node2.in_edges.index(from_node2), from_node1)
+        from_node1.out_edges.insert(from_node1.out_edges.index(to_node1), to_node2)
+        from_node2.out_edges.insert(from_node2.out_edges.index(to_node2), to_node1)
+
+        # Remove nodes from the corresponding in_edges and out_edges lists
+        to_node1.in_edges.remove(from_node1)
+        to_node2.in_edges.remove(from_node2)
+        from_node1.out_edges.remove(to_node1)
+        from_node2.out_edges.remove(to_node2)
+
+        # Assert that the nodes are where they should be to start with.
+        assert(from_node1 in to_node2.in_edges)
+        assert(to_node1 in from_node2.out_edges)
+        assert(from_node2 in to_node1.in_edges)
+        assert(to_node2 in from_node1.out_edges)        
+
 class Interation_Site:
+    is_counter = 0
+
     def __init__(self, nodes, spike_value, spike_type):
         self.available = True
         self.nodes = nodes
         self.spike_value = spike_value
         self.spike_type = spike_type
- 
+
     def __str__(self):
         s = ""
         s += "Available: " + str(self.available) + "\n"
-        s += "Nodes: " + str(list(map(str, self.nodes))) + "\n"
+        s += "Nodes: " + str([node.id for node in self.nodes]) + "\n"
         s += "Spike value: " + str(self.spike_value) + "\n"
         s += "Spike type: " + str(self.spike_type) + "\n"
         return s

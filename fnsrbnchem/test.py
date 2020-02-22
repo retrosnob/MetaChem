@@ -51,6 +51,8 @@ def test2():
     print(a_site)
     print(b_site)
     c = particle.Particle.compose(particle1=a, particle2=b, int_site1=a_site, int_site2=b_site)
+    print(a_site)
+    print(b_site)
     print(c.rbn.summarystring())
     print(c)
     viz.visualize(c)

@@ -1,0 +1,7 @@
+Add repr methods. __repr__ is a string representation for the developer, while __str__ is a string representation for the user.
+
+Need to decide what is instance, class and static in the methods. Instinct is to massively simplify the classes and just keep
+the functions at the module level.
+
+Make the class -> module changes and then do a test of bonding two interaction sites twice in a row to take them back to where they were.
+
