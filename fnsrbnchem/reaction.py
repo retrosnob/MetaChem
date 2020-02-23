@@ -1,8 +1,4 @@
-def printatom(atom):
-    print(atom)
-
-
-def particlescanbond(p1, p2):
+def getbondablesites(p1, p2):
     """
     Checks if two particles can bond by checking all combinations
     of their available interaction sites. There is an ambiguity 
@@ -23,11 +19,11 @@ def particlescanbond(p1, p2):
             for site2 in p2.interaction_sites:
                 if site2.available:
                     # Test the bonding criteria
-                    if _sitescanbond(site1, site2):
+                    if sitescanbond(site1, site2):
                         return site1, site2
     return (None, None)
 
-def _sitescanbond(site1, site2):
+def sitescanbond(site1, site2):
     """
     Checks if two interaction sites can bond.
 
@@ -42,7 +38,7 @@ def _sitescanbond(site1, site2):
     else:
         diff = abs(len(site1) - len(site2))
         spike_sum = site1.spike_type + site2.spike_type
-        print("diff: " + str(diff))
+        # print("diff: " + str(diff))
 
         if ((diff == 0 and site1.spike_type == 1 and site2.spike_type == 1)
         or (diff <= 1 and spike_sum > 2 and spike_sum < 6)
@@ -50,3 +46,7 @@ def _sitescanbond(site1, site2):
             return True
         else:
             return False
+
+if __name__ == '__main__':
+    print('reaction.py invoked as main')
+    pass

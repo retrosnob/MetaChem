@@ -48,27 +48,22 @@ class Particle:
 
         # We now have a new RBN object with edges between them as defined by the edge swaps specified by the interaction lists.
         # Need to calculate the new cycle and return it to the particle, where new spike details will be calculated.
-        obj.rbn.basin, obj.rbn.attractor = obj.rbn._calculate_cycle()
+        obj.rbn.basin, obj.rbn.attractor = rbn._calculate_cycle(obj.rbn)
                
         obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
 
         # But what to do we do with InteractionSites? They have to be inherited from the parent particles... ?
         # Concatenate them?
 
+
+        obj.interaction_sites = particle1.interaction_sites + particle2.interaction_sites
+
+        obj._initialize()
+
         # First set the bonded interaction sites to unavailable for further bonding.
         int_site1.available = False
         int_site2.available = False
 
-        # All interaction_sites are inherited by the composite particle but don't forget that the interaction
-        # site objects are not changed by the bonding (after all they are not recalculated afterwards), 
-        # only the edges of the RBN (and hence the attractor) are.
-        # This shouldn't affect anything (?) because the bonded interaction sites can't take part in any more
-        # bonds anyway.... Check this.
-        # ! This is wrong. You do have to change the interaction sites in order to give them new spike values and test
-        # ! their stability criteria.
-        obj.interaction_sites = particle1.interaction_sites + particle2.interaction_sites
-
-        obj._initialize()
         return obj
 
     @classmethod
@@ -113,6 +108,7 @@ class Particle:
 
     def __str__(self):
         s = 'Particle ' + str(self.id) + '\n'
+        s += f'Atoms: {self.atoms}\n'
         site_idxs = [[node.id for node in site] for site in self.interaction_sites] 
         s += 'Interaction sites: ' + str(site_idxs) + '\n'
         s += 'Spike values: ' +str(self.spike_values) + '\n'
@@ -220,23 +216,17 @@ class Particle:
     def _do_edge_swaps(int_site1, int_site2):
         """
         Parameters:
-
         Description:
         
         Swaps nodes to form a pair of bonded interaction sites.
         
         a <- b <- c <- d <- e
-
         w <- x <- y <- z
-
         becomes
-
         a <- x <- c <- z <- e
         
         w <- b <- y <- d
-
         Parameters:
-
         int_site_1: The interaction site from one particle.
         
         int_site_2: The interaction site from the other particle.
@@ -262,13 +252,10 @@ class Particle:
         In an RBN in which there is an edge from from_node1 to to_node1 and from from_node2 to
         to_node2, this method creates an edge from from_node1 to to_node2 and from from_node2 
         to to_node1, removing the original edges.
-
         It is important to remember that this method changes in_edges and out_edges, not any interaction site. 
         Interaction sites don't change unless they are part of a (temporary) bond. 
         Spike details should be recalculated after a called to switch_edges.
-
         Parameters:
-
         from_node1
         to_node1
         from_node2
@@ -323,7 +310,6 @@ class Interation_Site:
 
     def __getitem__(self, itemnumber):
         return self.nodes[itemnumber]
-
 
 if __name__ == "__main__":
     print("particle.py invoked as script...")

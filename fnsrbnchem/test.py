@@ -16,11 +16,11 @@ def getbondingpair():
     for i in range(1000):
         a = particle.Particle.new(12, 2, 0)
         b = particle.Particle.new(12, 2, 0)
-        a_site, b_site = reaction.particlescanbond(a, b)
+        a_site, b_site = reaction.getbondablesites(a, b)
         if a_site is not None:
-            print("Bond possible: ")
-            print(a_site)
-            print(b_site)
+            # print("Bond possible: ")
+            # print(a_site)
+            # print(b_site)
             break
     return (a, b)
 
@@ -29,9 +29,14 @@ def loadbondingpair(filename1, filename2):
     b = util.load_pickled_particle(filename = filename2)
     return (a, b)
 
+def getpairparticle():
+    a, b = getbondingpair()    
+    a_site, b_site = reaction.getbondablesites(a, b)
+    return particle.Particle.compose(particle1=a, particle2=b, int_site1=a_site, int_site2=b_site)
+
 def test1():
     a, b = loadbondingpair('c', 'd')
-    a_site, b_site = reaction.particlescanbond(a, b)
+    a_site, b_site = reaction.getbondablesites(a, b)
     print('Bonding sites: ')
     print(a_site)
     print(b_site)
@@ -42,7 +47,7 @@ def test1():
 def test2():
     # Create a bonding pair and bond them.
     a, b = getbondingpair()    
-    a_site, b_site = reaction.particlescanbond(a, b)
+    a_site, b_site = reaction.getbondablesites(a, b)
     print("Particle a:")
     print(a)
     print("Particle b:")
@@ -57,6 +62,21 @@ def test2():
     print(c)
     viz.visualize(c)
 
+def test3():
+    # Build a particle with three atoms in it.
+    pairs = []
+    triples = []
+    for i in range(100):
+        pairs.append(getpairparticle())
+    while not triples:
+        a = particle.Particle.new(12, 2, 0)
+        for pair in pairs:
+            a_site, pair_site = reaction.getbondablesites(a, pair)
+            if a_site is not None and pair_site is not None:
+                triples.append(particle.Particle.compose(particle1=a, particle2=pair, int_site1=a_site, int_site2=pair_site))
+                break
+    print(triples[0])
+
 
 #createbondingpair()
-test2()
+test3()
