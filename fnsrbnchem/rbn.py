@@ -134,7 +134,7 @@ def _calculate_cycle(rbn):
     
     """
     cycle = []
-    states = [node.state for node in rbn.nodes]
+    states = [0] * len(rbn.nodes)
     while states not in cycle:
         cycle.append(states)
         states = [_nextstate(node, change_state=True) for node in rbn.nodes]

@@ -22,7 +22,7 @@ def getbondingpair():
             # print(a_site)
             # print(b_site)
             break
-    return (a, b)
+    return (a, a_site, b, b_site)
 
 def loadbondingpair(filename1, filename2):
     a = util.load_pickled_particle(filename = filename1)
@@ -30,8 +30,7 @@ def loadbondingpair(filename1, filename2):
     return (a, b)
 
 def getpairparticle():
-    a, b = getbondingpair()    
-    a_site, b_site = reaction.getbondablesites(a, b)
+    a, a_site, b, b_site, = getbondingpair()    
     return particle.Particle.compose(particle1=a, particle2=b, int_site1=a_site, int_site2=b_site)
 
 def test1():
@@ -46,8 +45,7 @@ def test1():
 
 def test2():
     # Create a bonding pair and bond them.
-    a, b = getbondingpair()    
-    a_site, b_site = reaction.getbondablesites(a, b)
+    a, a_site, b, b_site = getbondingpair()    
     print("Particle a:")
     print(a)
     print("Particle b:")
@@ -77,6 +75,17 @@ def test3():
                 break
     print(triples[0])
 
+def test4():
+    # Bond two particles and then unbond them to check the algorithm works.
+    a, sitea, b, siteb = getbondingpair()
+    print('Before')
+    print(f'Site A: {sitea}')
+    print(f'Site B: {siteb}')
+    c = particle.Particle.compose(particle1=a, particle2=b, int_site1=sitea, int_site2=siteb)
+    print('After')
+    print(f'Site A: {sitea}')
+    print(f'Site B: {siteb}')
+    pass
 
-#createbondingpair()
-test3()
+
+test4()
