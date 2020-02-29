@@ -28,6 +28,7 @@ class Particle:
     
     @classmethod
     def compose(cls, particle1, particle2, int_site1, int_site2):
+        # ! Try to get by without using this...
         """
         The Particle factory method.
 
@@ -51,17 +52,12 @@ class Particle:
         # We now have a new RBN object with edges between them as defined by the edge swaps specified by the interaction lists.
         # Need to calculate the new cycle and return it to the particle, where new spike details will be calculated.
         # ! Can't do this until the edge swaps have been done
-        obj.rbn.basin, obj.rbn.attractor = rbn._calculate_cycle(obj.rbn)
+        obj.rbn.basin, obj.rbn.attractor = rbn.RBN.get_cycle(obj.rbn.nodes)
                
         obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
-
-        # But what to do we do with InteractionSites? They have to be inherited from the parent particles... ?
-        # Concatenate them?
-
-
         obj.interaction_sites = particle1.interaction_sites + particle2.interaction_sites
 
-        obj._initialize()
+        # obj._initialize()
 
         # First set the bonded interaction sites to unavailable for further bonding.
         int_site1.available = False
@@ -70,18 +66,19 @@ class Particle:
         return obj
 
     @classmethod
+    def decompose(cls, particle, int_site1, int_site2):
+        pass
+
+    @classmethod
     def new(cls, n, k, id):
         obj = cls()
         obj.rbn = rbn.RBN.new(n, k)
         obj.id = id
         obj.atoms = 1
-        # Setting the interaction lists is only ever done once
-        # obj.interaction_lists = obj._calculate_interaction_lists()
+        obj.parent_composite = None
         obj.interaction_sites = []
         for site in obj._calculate_interaction_lists():
-            interaction_site = Interaction_Site(site, obj)
-            obj.interaction_sites.append(interaction_site)
-        # obj._initialize()
+            obj.interaction_sites.append(Interaction_Site(site, parent_atom=obj))
         return obj
      
     def __str__(self):
@@ -134,17 +131,31 @@ class Particle:
         #   i ++
         # end
 
-      
+class Composite:
+    pass
+
+    """
+    Represents a composite particle by grouping together bonded atoms.
+    """
+
+    def __init__(self, atoms):
+        self.atoms = atoms # A list of atoms
+        for atom in self.atoms:
+            atom.parent_composite = self
+    
+    def get_nodes(self):
+        return [node for nodes in [atom.rbn.nodes for atom in self.atoms] for node in nodes]
+
+    
+
 
 class Interaction_Site:
     is_counter = 0
 
-    def __init__(self, nodes, parent):
+    def __init__(self, nodes, parent_atom):
         self.available = True
         self.nodes = nodes
-        # self.spike_value = spike_value
-        # self.spike_type = spike_type
-        self.parent = parent
+        self.parent_atom = parent_atom
 
     def spike_type(self):
         if len(self.nodes) >= 10:
@@ -156,9 +167,10 @@ class Interaction_Site:
 
     def spike_value(self):
         value = 0
-        attractor = self.parent.rbn.attractor
+        parent_nodes = self.parent_atom.parent_composite.get_nodes() if self.parent_atom.parent_composite is not None else self.parent_atom.rbn.nodes
+        _, attractor = rbn.RBN.get_cycle(parent_nodes)
         for node in self.nodes:
-            i = self.parent.rbn.nodes.index(node) # Get the index into the attractor
+            i = parent_nodes.index(node) # Get the index into the attractor
             sum_of_states = sum([states[i] for states in attractor])
             if sum_of_states == len(attractor):
                 value += 1

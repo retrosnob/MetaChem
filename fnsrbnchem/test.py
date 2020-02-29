@@ -87,5 +87,21 @@ def test4():
     print(f'Site B: {siteb}')
     pass
 
+def test5():
+    # Bond two particles and then unbond them to check the algorithm works.
+    a, sitea, b, siteb = getbondingpair()
+    print('Before')
+    print(f'Site A: {sitea}')
+    print(f'Site B: {siteb}')
+    reaction.do_edge_swaps(sitea, siteb)
+    c = particle.Composite([a] + [b])
+    print('After')
+    print(f'Site A: {sitea}')
+    print(f'Site B: {siteb}')
+    reaction.do_edge_swaps(sitea, siteb)
+    print('And back again...')
+    print(f'Site A: {sitea}')
+    print(f'Site B: {siteb}')
+    pass
 
-test4()
+test5()

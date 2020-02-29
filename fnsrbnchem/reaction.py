@@ -37,7 +37,7 @@ def sitescanbond(site1, site2):
         return False
     else:
         diff = abs(len(site1) - len(site2))
-        spike_sum = site1.spike_type + site2.spike_type
+        spike_sum = site1.spike_type() + site2.spike_type()
         # print("diff: " + str(diff))
 
         if ((diff == 0 and site1.spike_type == 1 and site2.spike_type == 1)
@@ -70,24 +70,23 @@ def do_edge_swaps(int_site1, int_site2):
 
     # 1 <- 2   becomes    1 <- 4
     # 3 <- 4              3 <- 2
-    for index in [i for i in range(1, min(len(int_site1.nodes), len(int_site2.nodes)))]:
+    indices = [i for i in range(1, min(len(int_site1.nodes), len(int_site2.nodes)))]
+    for index in indices:
         # Make appropriate changes to the inward edges lists for each node.s
-        Particle._switch_edges(int_site1.nodes[index], int_site1.nodes[index-1], int_site2.nodes[index], int_site2.nodes[index-1])
-        if (index - 1) % 2 == 1:
+        _switch_edges(int_site1.nodes[index], int_site1.nodes[index-1], int_site2.nodes[index], int_site2.nodes[index-1])
+    for index in indices:
+        if (index) % 2 == 1: # ie 1, 3, 5, 7, ...
             # Swap every other node in the interaction sites themselves. Have to operate on index - 1 node so as not to 
             # affect the edge switching.
-            int_site1.nodes[index - 1], int_site2.nodes[index - 1] = int_site2.nodes[index - 1], int_site1.nodes[index - 1] 
+            int_site1.nodes[index], int_site2.nodes[index] = int_site2.nodes[index], int_site1.nodes[index] 
+            # int_site1.nodes[index], int_site2.nodes[index] = int_site2.nodes[index], int_site1.nodes[index] 
 
-    # Need to actually change the interaction sites here but can't change them in the 
-
-@staticmethod
 def _switch_edges(from_node1, to_node1, from_node2, to_node2):
     """
     In an RBN in which there is an edge from from_node1 to to_node1 and from from_node2 to
     to_node2, this method creates an edge from from_node1 to to_node2 and from from_node2 
     to to_node1, removing the original edges.
     It is important to remember that this method changes in_edges and out_edges, not any interaction site. 
-    Interaction sites don't change unless they are part of a (temporary) bond. 
     Spike details should be recalculated after a called to switch_edges.
     Parameters:
     from_node1
@@ -99,7 +98,7 @@ def _switch_edges(from_node1, to_node1, from_node2, to_node2):
     # This method preserves k and so doesn't corrupt the RBN and can be called from outside the class.
 
     # Assert that the nodes are where they should be to start with.
-    assert(from_node1 in to_node1.in_edges)
+    assert from_node1 in to_node1.in_edges, f'Node {from_node1} is not in in_edges {to_node1.in_edges}'
     assert(to_node1 in from_node1.out_edges)
     assert(from_node2 in to_node2.in_edges)
     assert(to_node2 in from_node2.out_edges)
