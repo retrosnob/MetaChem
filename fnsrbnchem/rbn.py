@@ -82,8 +82,8 @@ class RBN:
         basin (list), attractor (list): A tuple containing the basin and attractor of the RBN as lists of lists of len(nodes) integers.
         
         """
-        for node in nodes:
-           node.state = 0
+        # for node in nodes:
+        #    node.state = 0
         cycle = []
         states = [0] * len(nodes)
         while states not in cycle:
