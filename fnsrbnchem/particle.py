@@ -190,7 +190,7 @@ class Interaction_Site:
         return len(self.nodes)
 
     def __getitem__(self, itemnumber):
-        return self.nodes[itemnumber]
+       return self.nodes[itemnumber]
 
 if __name__ == "__main__":
     print("particle.py invoked as script...")

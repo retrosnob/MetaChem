@@ -36,13 +36,13 @@ def sitescanbond(site1, site2):
     if len(site1) < 2 or len(site2) < 2:
         return False
     else:
-        diff = abs(len(site1) - len(site2))
-        spike_sum = site1.spike_type() + site2.spike_type()
-        # print("diff: " + str(diff))
+        spike_sum = abs(site1.spike_value() + site2.spike_value())
+        spike_type1 = site1.spike_type()
+        spike_type2 = site2.spike_type()
 
-        if ((diff == 0 and site1.spike_type == 1 and site2.spike_type == 1)
-        or (diff <= 1 and spike_sum > 2 and spike_sum < 6)
-        or (diff <= 2 and site1.spike_type == 3 or site2.spike_type == 3)):
+        if ((spike_sum == 0 and spike_type1 == 1 and spike_type2 == 1)
+        or (spike_sum <= 1 and (spike_type1 + spike_type2) > 2 and (spike_type1 + spike_type2) < 6)
+        or (spike_sum <= 2 and spike_type1 == 3 or spike_type2 == 3)):
             return True
         else:
             return False

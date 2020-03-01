@@ -75,13 +75,15 @@ class RBN:
 
         Parameters:
 
-        recalculate (boolean): True if the RBN is to recalculate its attractor before returning it. False otherwise.
+        nodes (list): The nodes with which to calculate that attractor cycle.
 
         Returns:
 
-        basin (list), attractor (list): A tuple containing the basin and attractor of the RBN as lists of lists of N integers.
+        basin (list), attractor (list): A tuple containing the basin and attractor of the RBN as lists of lists of len(nodes) integers.
         
         """
+        for node in nodes:
+           node.state = 0
         cycle = []
         states = [0] * len(nodes)
         while states not in cycle:

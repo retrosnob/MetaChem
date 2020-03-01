@@ -89,19 +89,104 @@ def test4():
 
 def test5():
     # Bond two particles and then unbond them to check the algorithm works.
+    # When I first did this test it occasionally gave a different attractor for an atom
+    # after it had been unbonded from the attractor before it was bonded. I found that 
+    # RBN.get_cycle() was zeroing the values of the nodes properly. Test 6 tries to check
+    # that this bug no longer exists.
     a, sitea, b, siteb = getbondingpair()
     print('Before')
     print(f'Site A: {sitea}')
+    for strnode in [f'{str(node)}' for node in sitea.nodes]:
+        print(strnode)
+    _, attractor = rbn.RBN.get_cycle(sitea.parent_atom.rbn.nodes)
+    print(attractor)
+    print()
     print(f'Site B: {siteb}')
+    for strnode in [f'{str(node)}' for node in siteb.nodes]:
+        print(strnode)
+    _, attractor = rbn.RBN.get_cycle(siteb.parent_atom.rbn.nodes)
+    print(attractor)
+    print(f'Sites can bond: {reaction.sitescanbond(sitea, siteb)}')
+    typea1 = sitea.spike_type()
+    vala1 = sitea.spike_value()
+    typeb1 = siteb.spike_type()
+    valb1 = siteb.spike_value()
+    print(f'{typea1}, {vala1}, {typeb1}, {valb1}')
+    print()
+
+
     reaction.do_edge_swaps(sitea, siteb)
     c = particle.Composite([a] + [b])
     print('After')
     print(f'Site A: {sitea}')
+    for strnode in [f'{str(node)}' for node in sitea.nodes]:
+        print(strnode)
+    print()
     print(f'Site B: {siteb}')
+    for strnode in [f'{str(node)}' for node in siteb.nodes]:
+        print(strnode)
+    print(f'Sites can bond: {reaction.sitescanbond(sitea, siteb)}')
+    print()
+
     reaction.do_edge_swaps(sitea, siteb)
+    sitea.parent_atom.parent_composite = None
+    siteb.parent_atom.parent_composite = None
+
     print('And back again...')
     print(f'Site A: {sitea}')
+    for strnode in [f'{str(node)}' for node in sitea.nodes]:
+        print(strnode)
+    _, attractor = rbn.RBN.get_cycle(sitea.parent_atom.rbn.nodes)
+    print(attractor)
+    print()
     print(f'Site B: {siteb}')
-    pass
+    for strnode in [f'{str(node)}' for node in siteb.nodes]:
+        print(strnode)
+    _, attractor = rbn.RBN.get_cycle(siteb.parent_atom.rbn.nodes)
+    print(attractor)
+    print(f'Sites can bond: {reaction.sitescanbond(sitea, siteb)}')
+    typea2 = sitea.spike_type()
+    vala2 = sitea.spike_value()
+    typeb2 = siteb.spike_type()
+    valb2 = siteb.spike_value()
+    print(f'{typea2}, {vala2}, {typeb2}, {valb2}')
+
+    # Check
+    if typea1 != typea2 or vala1 != vala2 or typeb1 != typeb2 or valb1 != valb2:
+        print("Error")
+
+def test6():
+    for i in range(100):
+        a, sitea, b, siteb = getbondingpair()
+
+        # Get spikes before
+        typea1 = sitea.spike_type()
+        vala1 = sitea.spike_value()
+        typeb1 = siteb.spike_type()
+        valb1 = siteb.spike_value()
+        print(f'{typea1}, {vala1}, {typeb1}, {valb1}')
+        
+        # Now bond
+        reaction.do_edge_swaps(sitea, siteb)
+        c = particle.Composite([a] + [b])
+
+
+        # Now unbond
+        reaction.do_edge_swaps(sitea, siteb)
+        sitea.parent_atom.parent_composite = None
+        siteb.parent_atom.parent_composite = None
+        
+        # Get spikes after
+        typea2 = sitea.spike_type()
+        vala2 = sitea.spike_value()
+        typeb2 = siteb.spike_type()
+        valb2 = siteb.spike_value()
+        print(f'{typea2}, {vala2}, {typeb2}, {valb2}')
+
+        # Check
+        if typea1 != typea2 or vala1 != vala2 or typeb1 != typeb2 or valb1 != valb2:
+            print("Error")
+            break
+
 
 test5()
