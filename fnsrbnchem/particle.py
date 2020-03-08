@@ -8,9 +8,8 @@ class Particle:
     Represents an Atom in the Frozen-Node Spiky RBN Chemistry.
 
     """
-
-    # TODO  Need a way to determine which of the ILs are free to bond and which are occupied.
-
+    id = 0
+    
     def __init__(self):
 
         """
@@ -60,8 +59,7 @@ class Particle:
         # obj._initialize()
 
         # First set the bonded interaction sites to unavailable for further bonding.
-        int_site1.available = False
-        int_site2.available = False
+        int_site1.bondedto, int_site2.bondedto = int_site2, int_site1
 
         return obj
 
@@ -70,10 +68,11 @@ class Particle:
         pass
 
     @classmethod
-    def new(cls, n, k, id):
+    def new(cls, n, k):
         obj = cls()
         obj.rbn = rbn.RBN.new(n, k)
-        obj.id = id
+        obj.id = Particle.id
+        Particle.id += 1
         obj.atoms = 1
         obj.parent_composite = None
         obj.interaction_sites = []
@@ -146,14 +145,26 @@ class Composite:
     def get_nodes(self):
         return [node for nodes in [atom.rbn.nodes for atom in self.atoms] for node in nodes]
 
-    
-
+    def check_bonds(self, atom):
+        queue = []
+        queue.append(atom)
+        visited = []
+        while queue:
+            current = queue.pop(0)
+            for site in current.interaction_sites:
+                if site.bondedto is not None:
+                    next = site.bondedto.parent_atom
+                    if next not in visited:	
+                        queue.append(next)
+            visited.append(current)
+        # visited now contains the atoms linked to the first atom
+        return visited
 
 class Interaction_Site:
     is_counter = 0
 
     def __init__(self, nodes, parent_atom):
-        self.available = True
+        self.bondedto = None
         self.nodes = nodes
         self.parent_atom = parent_atom
 
@@ -180,7 +191,7 @@ class Interaction_Site:
 
     def __str__(self):
         s = ""
-        s += "Available: " + str(self.available) + "\n"
+        s += "Bonded to: " + str(self.bondedto) + "\n"
         s += "Nodes: " + str([node.id for node in self.nodes]) + "\n"
         s += "Spike value: " + str(self.spike_value()) + "\n"
         s += "Spike type: " + str(self.spike_type()) + "\n"
@@ -195,7 +206,7 @@ class Interaction_Site:
 if __name__ == "__main__":
     print("particle.py invoked as script...")
     # rbn.NodeSpace(1000)
-    a = Particle.new(12, 2, 0)
+    a = Particle.new(12, 2)
     print(a)
     for site in a.interaction_sites:
         print(f'{site.spike_value()} {site.spike_type()}')

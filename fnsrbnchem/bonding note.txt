@@ -1,0 +1,23 @@
+<particle.Particle o...36356ce10>
+<particle.Interactio...3635729e8> bonded to <particle.Interaction_Site object at 0x7f436354e8d0>
+<particle.Interactio...363572a58> bonded to <particle.Interaction_Site object at 0x7f4363572a58>
+<particle.Interactio...363572ac8> bonded to <particle.Interaction_Site object at 0x7f4363572ac8>
+
+<particle.Particle o...36356ce10>
+<particle.Interactio...3635729e8> bonded to <particle.Interaction_Site object at 0x7f436354e8d0>
+<particle.Interactio...363572a58> bonded to <particle.Interaction_Site object at 0x7f4363572a58>
+<particle.Interactio...363572ac8> bonded to <particle.Interaction_Site object at 0x7f4363572ac8>
+
+<particle.Particle o...36356ce10>
+<particle.Interactio...3635729e8> bonded to <particle.Interaction_Site object at 0x7f436354e8d0>
+<particle.Interactio...363572a58> bonded to <particle.Interaction_Site object at 0x7f4363572a58>
+<particle.Interactio...363572ac8> bonded to <particle.Interaction_Site object at 0x7f4363572ac8>
+
+<particle.Particle o...36354bcc0>
+<particle.Interactio...36354e2b0> bonded to <particle.Interaction_Site object at 0x7f436354e940>
+<particle.Interactio...36354e320> bonded to None
+
+<particle.Particle o...36354bd68>
+<particle.Interactio...36354e8d0> bonded to <particle.Interaction_Site object at 0x7f43635729e8>
+<particle.Interactio...36354e940> bonded to <particle.Interaction_Site object at 0x7f436354e2b0>
+<particle.Interactio...36354e9b0> bonded to <particle.Interaction_Site object at 0x7f4363589208>

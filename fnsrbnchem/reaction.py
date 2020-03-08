@@ -15,9 +15,9 @@ def getbondablesites(p1, p2):
 
     """
     for site1 in p1.interaction_sites:
-        if site1.available:
+        if not site1.bondedto:
             for site2 in p2.interaction_sites:
-                if site2.available:
+                if not site2.bondedto:
                     # Test the bonding criteria
                     if sitescanbond(site1, site2):
                         return site1, site2
@@ -98,10 +98,10 @@ def _switch_edges(from_node1, to_node1, from_node2, to_node2):
     # This method preserves k and so doesn't corrupt the RBN and can be called from outside the class.
 
     # Assert that the nodes are where they should be to start with.
-    assert from_node1 in to_node1.in_edges, f'Node {from_node1} is not in in_edges {to_node1.in_edges}'
-    assert(to_node1 in from_node1.out_edges)
-    assert(from_node2 in to_node2.in_edges)
-    assert(to_node2 in from_node2.out_edges)
+    assert from_node1 in to_node1.in_edges, f'Node {from_node1} is not in in_edges {[str(node) for node in to_node1.in_edges]}'
+    assert to_node1 in from_node1.out_edges, f'Node {to_node1} is not in out_edges {[str(node) for node in from_node1.out_edges]}'
+    assert from_node2 in to_node2.in_edges, f'AAA Node {from_node2} is not in in_edges {[str(node) for node in to_node2.in_edges]}'
+    assert to_node2 in from_node2.out_edges, f'BBB Node {to_node2} is not in out_edges {[str(node) for node in from_node2.out_edges]}'
 
     # Add nodes to the corresponding in_edges and out_edges lists
     to_node1.in_edges.insert(to_node1.in_edges.index(from_node1), from_node2)

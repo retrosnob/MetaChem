@@ -14,8 +14,8 @@ def savebondingpair(a, b):
 
 def getbondingpair():
     for i in range(1000):
-        a = particle.Particle.new(12, 2, 0)
-        b = particle.Particle.new(12, 2, 0)
+        a = particle.Particle.new(12, 2)
+        b = particle.Particle.new(12, 2)
         a_site, b_site = reaction.getbondablesites(a, b)
         if a_site is not None:
             # print("Bond possible: ")
@@ -31,7 +31,50 @@ def loadbondingpair(filename1, filename2):
 
 def getpairparticle():
     a, a_site, b, b_site, = getbondingpair()    
-    return particle.Particle.compose(particle1=a, particle2=b, int_site1=a_site, int_site2=b_site)
+    return particle.Composite(int_site1=a_site, int_site2=b_site)
+
+def get_composites_of_size(size):
+    """
+    Returns a list of composites of size size. Starts with 1000 2-composites. 
+    At the moment, if size = 10 it tends to return only a handful of 10-composites.
+
+    """
+    composites = []
+    for i in range(1000):
+        a, sitea, b, siteb = getbondingpair()
+        assert reaction.sitescanbond(sitea, siteb)
+        reaction.do_edge_swaps(sitea, siteb)
+        c = particle.Composite([a] + [b])
+        sitea.bondedto, siteb.bondedto = siteb, sitea
+        stable = reaction.sitescanbond(sitea, siteb)
+        if stable:
+            composites.append(c)
+    for i in range(size):
+        print(len(composites))
+        compositesold = composites
+        composites = []
+        a = particle.Particle.new(12, 2)
+        for composite in compositesold:
+            if len(composite.atoms) != len(composite.check_bonds(composite.atoms[0])):
+                print("error")
+            for atom in composite.atoms:
+                sitea, siteb = reaction.getbondablesites(a, atom)
+                if sitea and siteb:
+                    reaction.do_edge_swaps(sitea, siteb)
+                    sitea.bondedto, siteb.bondedto = siteb, sitea
+                    c = particle.Composite([a] + composite.atoms)
+                    composites.append(c)
+                    a = particle.Particle.new(12, 2)
+                    break
+    for c in composites:    
+        print([atom.id for atom in c.atoms])
+        for i in range(size):
+            print([atom.id for atom in c.check_bonds(c.atoms[i])])
+        if len(c.atoms) != len(c.check_bonds(c.atoms[0])) or len(c.atoms) != len(c.check_bonds(c.atoms[1])):
+            print("error")
+    print('done')
+    return composites
+
 
 def test1():
     a, b = loadbondingpair('c', 'd')
@@ -67,7 +110,7 @@ def test3():
     for i in range(100):
         pairs.append(getpairparticle())
     while not triples:
-        a = particle.Particle.new(12, 2, 0)
+        a = particle.Particle.new(12, 2)
         for pair in pairs:
             a_site, pair_site = reaction.getbondablesites(a, pair)
             if a_site is not None and pair_site is not None:
@@ -200,4 +243,120 @@ def test7():
             print(f'{i} Failed stability')
             break
 
-test7()
+def test8():
+    """
+    Build a composite of more than 2 atoms.
+    Repeat 100:
+        Get a composite c that is stable
+        Add it to a list composites
+        Get an atom a
+        for each composite in composites:
+            for each atom in composite:
+                try to bond a to atom (which uses the composite's attractor)
+    """
+    composites = []
+    for i in range(100):
+        a, sitea, b, siteb = getbondingpair()
+        assert reaction.sitescanbond(sitea, siteb)
+        reaction.do_edge_swaps(sitea, siteb)
+        c = particle.Composite([a] + [b])
+        sitea.bondedto, siteb.bondedto = siteb, sitea
+        stable = reaction.sitescanbond(sitea, siteb)
+        if not stable:
+            print(f'{i} Failed stability')
+        else:
+            composites.append(c)
+            a = particle.Particle.new(12, 2)
+            for composite in composites:
+                for atom in composite.atoms:
+                    sitea, siteb = reaction.getbondablesites(a, atom)
+                    if sitea and siteb:
+                        reaction.do_edge_swaps(sitea, siteb)
+                        sitea.bondedto, siteb.bondedto = siteb, sitea
+                        c = particle.Composite([a] + composite.atoms)
+                        print(c.atoms)
+                        break
+                    else:
+                        print("No bonding possible between composite and atom.")
+
+def test9():
+    # ! Problems here. The number of atoms in self.atoms disagrees with the atoms returned
+    # ! by the particle traversal. The traversal is correct, so bonds are happening where 
+    # ! they shouldn't be.
+    # * The problem was that I kept going through the 2-composites over and over and the 
+    # * the second and subsequent times through some of them were already bonded.
+    # Build some larger molecules to test the traversal defined in Composite.
+    composites = []
+    for i in range(10000):
+        a, sitea, b, siteb = getbondingpair()
+        assert reaction.sitescanbond(sitea, siteb)
+        reaction.do_edge_swaps(sitea, siteb)
+        c = particle.Composite([a] + [b])
+        sitea.bondedto, siteb.bondedto = siteb, sitea
+        stable = reaction.sitescanbond(sitea, siteb)
+        if stable:
+            composites.append(c)
+    print(len(composites))
+    composites3 = []
+    a = particle.Particle.new(12, 2)
+    for composite in composites:
+        if len(composite.atoms) != len(composite.check_bonds(composite.atoms[0])):
+            print("error")
+        for atom in composite.atoms:
+            sitea, siteb = reaction.getbondablesites(a, atom)
+            if sitea and siteb:
+                reaction.do_edge_swaps(sitea, siteb)
+                sitea.bondedto, siteb.bondedto = siteb, sitea
+                c = particle.Composite([a] + composite.atoms)
+                composites3.append(c)
+                a = particle.Particle.new(12, 2)
+                break
+    # for composite in composites3:
+    #     print([atom.id for atom in composite.check_bonds(composite.atoms[0])])
+    #     print([atom.id for atom in composite.check_bonds(composite.atoms[1])])
+    #     print([atom.id for atom in composite.check_bonds(composite.atoms[2])])
+    #     print()
+    print(len(composites3))
+    composites4 = []
+    a = particle.Particle.new(12, 2)
+    for composite in composites3:
+        if len(composite.atoms) != len(composite.check_bonds(composite.atoms[0])):
+            print("error")
+        for atom in composite.atoms:
+            sitea, siteb = reaction.getbondablesites(a, atom)
+            if sitea and siteb:
+                reaction.do_edge_swaps(sitea, siteb)
+                sitea.bondedto, siteb.bondedto = siteb, sitea
+                c = particle.Composite([a] + composite.atoms)
+                composites4.append(c)
+                a = particle.Particle.new(12, 2)
+                break
+    print(len(composites4))
+
+def test10():
+    # Create 100 2-atom composites and check that their len(self.atoms) agrees with 
+    # the number of atoms returned by the traversal.
+    composites = []
+    for i in range(1000):
+        a, sitea, b, siteb = getbondingpair()
+        assert reaction.sitescanbond(sitea, siteb)
+        reaction.do_edge_swaps(sitea, siteb)
+        c = particle.Composite([a] + [b])
+        sitea.bondedto, siteb.bondedto = siteb, sitea
+        stable = reaction.sitescanbond(sitea, siteb)
+        print([atom.id for atom in c.atoms])
+        print([atom.id for atom in c.check_bonds(c.atoms[0])])
+        print([atom.id for atom in c.check_bonds(c.atoms[1])])
+        if len(c.atoms) != len(c.check_bonds(c.atoms[0])) or len(c.atoms) != len(c.check_bonds(c.atoms[1])):
+            print("error")
+    print('done')
+
+
+def test11():
+    # Check decomposition of particle.
+    # Start with 8-composite.
+    composite = get_composites_of_size(8)[0]
+
+
+
+test11()
