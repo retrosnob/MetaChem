@@ -47,6 +47,18 @@ def sitescanbond(site1, site2):
         else:
             return False
 
+def break_bond(site1, site2):
+    assert site1.bondedto is site2 and site2.bondedto is site1, "Trying to break bond between unbonded particles."
+    reaction.do_edge_swaps(sitea, siteb)
+    sitea.bondedto, siteb.bondedto = None, None
+    # Need to set new parent composites here otherwise wrong attractor will be calculated.
+    # Create composite from each atom by traversing.
+    # Then return two composites.
+
+def is_stable(site1, site2):
+    # For the time being....
+    return sitescanbond(site1, site2)
+
 def do_edge_swaps(int_site1, int_site2):
     """
     Parameters:

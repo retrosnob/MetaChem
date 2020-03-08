@@ -1,6 +1,7 @@
 import rbn
 from collections import defaultdict
 from operator import add
+import reaction
 
 class Particle:
 
@@ -24,49 +25,8 @@ class Particle:
         Returns: None
 
         """
-    
-    @classmethod
-    def compose(cls, particle1, particle2, int_site1, int_site2):
-        # ! Try to get by without using this...
-        """
-        The Particle factory method.
-
-        Parameters:
-
-        Two particles from which to create the composite.
-
-        Returns: The new composite particle.
-
-        """
-        # Creates a new particle object.
-        obj = cls()
-        # This creates a new underlying RBN by performing the edge swaps according to the interaction site nodes list.
-        # It also recalculates the attractor.
-        obj.rbn = rbn.RBN.compose(rbn1=particle1.rbn, rbn2=particle2.rbn, nodes1=int_site1.nodes, nodes2=int_site2.nodes)
-        obj.atoms = particle1.atoms + particle2.atoms # This won't work when we decompose.
-        
-        # This is now in the reaction module.
-        # Particle._do_edge_swaps(int_site1, int_site2)
-
-        # We now have a new RBN object with edges between them as defined by the edge swaps specified by the interaction lists.
-        # Need to calculate the new cycle and return it to the particle, where new spike details will be calculated.
-        # ! Can't do this until the edge swaps have been done
-        obj.rbn.basin, obj.rbn.attractor = rbn.RBN.get_cycle(obj.rbn.nodes)
-               
-        obj.id = "(" + str(particle1.id) + "." + str(particle2.id) + ")"
-        obj.interaction_sites = particle1.interaction_sites + particle2.interaction_sites
-
-        # obj._initialize()
-
-        # First set the bonded interaction sites to unavailable for further bonding.
-        int_site1.bondedto, int_site2.bondedto = int_site2, int_site1
-
-        return obj
-
-    @classmethod
-    def decompose(cls, particle, int_site1, int_site2):
         pass
-
+  
     @classmethod
     def new(cls, n, k):
         obj = cls()
@@ -143,9 +103,12 @@ class Composite:
             atom.parent_composite = self
     
     def get_nodes(self):
+        # Note that this works even if the composite has only one atom.
         return [node for nodes in [atom.rbn.nodes for atom in self.atoms] for node in nodes]
 
-    def check_bonds(self, atom):
+    @classmethod
+    # Given any atom, returns a list of atoms in the same parent composite or just the atom if it is not bound.
+    def traverse(self, atom):
         queue = []
         queue.append(atom)
         visited = []
@@ -159,6 +122,36 @@ class Composite:
             visited.append(current)
         # visited now contains the atoms linked to the first atom
         return visited
+
+    @classmethod
+    def decompose(atom):
+        # returns either the composite or, if an unstable bond is encountered, two composites separated
+        # where the unstable bond was broken.
+        queue = []
+        queue.append(atom)
+        visited = []
+        while queue:
+            current = queue.pop(0)
+            for site in current.interaction_sites:
+                if site.bondedto is not None:
+                    # test the bond
+                    if reaction.is_stable(site, site.bondedto):
+                        next = site.bondedto.parent_atom
+                        if next not in visited:	
+                            queue.append(next)
+                    else:
+                        site1, site2 = site, site.bondedto
+                        reaction.break_bond(site1, site2)
+                        # Where do we recalculate the attractor? Need to construct a composite here.
+                        # The calculation of the attractor relies on the list of atoms in the parent composite.
+                        # Perhaps break bond should return two composites? Why wouldn't it?
+                        return Composite.traverse(site1.parent_atom), Composite.traverse(site2.parent_atom)
+            visited.append(current)
+        # TODO Will need to go through resulting list of atoms and create new composites or set parent_composite = None
+        return visited
+
+
+
 
 class Interaction_Site:
     is_counter = 0

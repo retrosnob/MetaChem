@@ -55,7 +55,7 @@ def get_composites_of_size(size):
         composites = []
         a = particle.Particle.new(12, 2)
         for composite in compositesold:
-            if len(composite.atoms) != len(composite.check_bonds(composite.atoms[0])):
+            if len(composite.atoms) != len(particle.Composite.traverse(composite.atoms[0])):
                 print("error")
             for atom in composite.atoms:
                 sitea, siteb = reaction.getbondablesites(a, atom)
@@ -69,8 +69,8 @@ def get_composites_of_size(size):
     for c in composites:    
         print([atom.id for atom in c.atoms])
         for i in range(size):
-            print([atom.id for atom in c.check_bonds(c.atoms[i])])
-        if len(c.atoms) != len(c.check_bonds(c.atoms[0])) or len(c.atoms) != len(c.check_bonds(c.atoms[1])):
+            print([atom.id for atom in particle.Composite.traverse(c.atoms[i])])
+        if len(c.atoms) != len(particle.Composite.traverse(c.atoms[0])) or len(c.atoms) != len(particle.Composite.traverse(c.atoms[1])):
             print("error")
     print('done')
     return composites
@@ -300,7 +300,7 @@ def test9():
     composites3 = []
     a = particle.Particle.new(12, 2)
     for composite in composites:
-        if len(composite.atoms) != len(composite.check_bonds(composite.atoms[0])):
+        if len(composite.atoms) != len(particle.Composite.traverse(composite.atoms[0])):
             print("error")
         for atom in composite.atoms:
             sitea, siteb = reaction.getbondablesites(a, atom)
@@ -312,15 +312,15 @@ def test9():
                 a = particle.Particle.new(12, 2)
                 break
     # for composite in composites3:
-    #     print([atom.id for atom in composite.check_bonds(composite.atoms[0])])
-    #     print([atom.id for atom in composite.check_bonds(composite.atoms[1])])
-    #     print([atom.id for atom in composite.check_bonds(composite.atoms[2])])
+    #     print([atom.id for atom in particle.Composite.traverse(composite.atoms[0])])
+    #     print([atom.id for atom in particle.Composite.traverse(composite.atoms[1])])
+    #     print([atom.id for atom in particle.Composite.traverse(composite.atoms[2])])
     #     print()
     print(len(composites3))
     composites4 = []
     a = particle.Particle.new(12, 2)
     for composite in composites3:
-        if len(composite.atoms) != len(composite.check_bonds(composite.atoms[0])):
+        if len(composite.atoms) != len(particle.Composite.traverse(composite.atoms[0])):
             print("error")
         for atom in composite.atoms:
             sitea, siteb = reaction.getbondablesites(a, atom)
@@ -345,17 +345,17 @@ def test10():
         sitea.bondedto, siteb.bondedto = siteb, sitea
         stable = reaction.sitescanbond(sitea, siteb)
         print([atom.id for atom in c.atoms])
-        print([atom.id for atom in c.check_bonds(c.atoms[0])])
-        print([atom.id for atom in c.check_bonds(c.atoms[1])])
-        if len(c.atoms) != len(c.check_bonds(c.atoms[0])) or len(c.atoms) != len(c.check_bonds(c.atoms[1])):
+        print([atom.id for atom in particle.Composite.traverse(c.atoms[0])])
+        print([atom.id for atom in particle.Composite.traverse(c.atoms[1])])
+        if len(c.atoms) != len(particle.Composite.traverse(c.atoms[0])) or len(c.atoms) != len(particle.Composite.traverse(c.atoms[1])):
             print("error")
     print('done')
-
 
 def test11():
     # Check decomposition of particle.
     # Start with 8-composite.
     composite = get_composites_of_size(8)[0]
+    print(composite)
 
 
 
