@@ -1,17 +1,19 @@
+import particle
+
 def getbondablesites(p1, p2):
     """
-    Checks if two particles can bond by checking all combinations
+    Checks if two Atoms can bond by checking all combinations
     of their available interaction sites. There is an ambiguity 
-    here because the particles might be able to bond using more
+    here because the Atoms might be able to bond using more
     than one combination of sites but no explicit decision is made
     as to which combination is chosen. We just take the first we
     find.
 
-    Parameters: The two candidate particles.
+    Parameters: The two candidate Atoms.
 
     Returns: The two interactions sites as a tuple or (None, None)
     if no bond is possible. Note that the sites are returned in the
-     same order as the particles to which they belong.
+     same order as the Atoms to which they belong.
 
     """
     for site1 in p1.interaction_sites:
@@ -47,13 +49,23 @@ def sitescanbond(site1, site2):
         else:
             return False
 
-def break_bond(site1, site2):
-    assert site1.bondedto is site2 and site2.bondedto is site1, "Trying to break bond between unbonded particles."
-    reaction.do_edge_swaps(sitea, siteb)
-    sitea.bondedto, siteb.bondedto = None, None
+def bond(site1, site2):
+    assert site1.bondedto is None and site2.bondedto is None, "Trying to bonded sites that are already bonded."
+    do_edge_swaps(site1, site1)
+    site1.bondedto, site2.bondedto = site2, site1
+    return particle.Composite(particle.Composite.traverse(site1.parent_atom))
     # Need to set new parent composites here otherwise wrong attractor will be calculated.
     # Create composite from each atom by traversing.
     # Then return two composites.
+
+def break_bond(site1, site2):
+    assert site1.bondedto is site2 and site2.bondedto is site1, "Trying to break bond between unbonded Atoms."
+    do_edge_swaps(site1, site1)
+    site1.bondedto, site2.bondedto = None, None
+    # Need to set new parent composites here otherwise wrong attractor will be calculated.
+    # Create composite from each atom by traversing.
+    # Then return two composites.
+    return particle.Composite(particle.Composite.traverse(site1.parent_atom)), particle.Composite(particle.Composite.traverse(site2.parent_atom))
 
 def is_stable(site1, site2):
     # For the time being....
@@ -73,9 +85,9 @@ def do_edge_swaps(int_site1, int_site2):
     
     w <- b <- y <- d
     Parameters:
-    int_site_1: The interaction site from one particle.
+    int_site_1: The interaction site from one Atom.
     
-    int_site_2: The interaction site from the other particle.
+    int_site_2: The interaction site from the other Atom.
     """
     # THIS IS WHERE BONDING TAKES PLACE
     # Find the nodes at the odd indices running up to the length of the shorter of the two interaction sites involved in the bond, then switch the edges, e.g in _switch_edges(2, 1, 4, 3):

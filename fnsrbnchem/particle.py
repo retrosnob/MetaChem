@@ -3,7 +3,7 @@ from collections import defaultdict
 from operator import add
 import reaction
 
-class Particle:
+class Atom:
 
     """
     Represents an Atom in the Frozen-Node Spiky RBN Chemistry.
@@ -14,7 +14,7 @@ class Particle:
     def __init__(self):
 
         """
-        The Particle class constructor.
+        The Atom class constructor.
 
         Parameters:
 
@@ -31,8 +31,8 @@ class Particle:
     def new(cls, n, k):
         obj = cls()
         obj.rbn = rbn.RBN.new(n, k)
-        obj.id = Particle.id
-        Particle.id += 1
+        obj.id = Atom.id
+        Atom.id += 1
         obj.atoms = 1
         obj.parent_composite = None
         obj.interaction_sites = []
@@ -41,7 +41,7 @@ class Particle:
         return obj
      
     def __str__(self):
-        s = 'Particle ' + str(self.id) + '\n'
+        s = 'Atom ' + str(self.id) + '\n'
         s += f'Atoms: {self.atoms}\n'
         site_idxs = [[node.id for node in site] for site in self.interaction_sites] 
         s += 'Interaction sites: ' + str(site_idxs) + '\n'
@@ -94,7 +94,7 @@ class Composite:
     pass
 
     """
-    Represents a composite particle by grouping together bonded atoms.
+    Represents a composite Atom by grouping together bonded atoms.
     """
 
     def __init__(self, atoms):
@@ -106,9 +106,21 @@ class Composite:
         # Note that this works even if the composite has only one atom.
         return [node for nodes in [atom.rbn.nodes for atom in self.atoms] for node in nodes]
 
+    def is_valid(self):
+        """
+        Checks that the atoms contained in the composites atoms list is the same as th list of atoms
+        discovered by the traversal. If this returns false it implies that the composite comprises
+        discrete two or more sets of atoms that are not bonded to each each other. It is easy to 
+        create an invalid composite by creating two unbonded atoms and then passing them in a list
+        to the Composite constructor.
+        """
+        atomlist = sorted([atom.id for atom in self.atoms])
+        atomtraversal = sorted([atom.id for atom in self.traverse(self.atoms[0])]) 
+        return atomlist == atomtraversal
+
     @classmethod
     # Given any atom, returns a list of atoms in the same parent composite or just the atom if it is not bound.
-    def traverse(self, atom):
+    def traverse(cls, atom):
         queue = []
         queue.append(atom)
         visited = []
@@ -124,31 +136,48 @@ class Composite:
         return visited
 
     @classmethod
-    def decompose(atom):
-        # returns either the composite or, if an unstable bond is encountered, two composites separated
-        # where the unstable bond was broken.
-        queue = []
-        queue.append(atom)
-        visited = []
-        while queue:
-            current = queue.pop(0)
-            for site in current.interaction_sites:
-                if site.bondedto is not None:
-                    # test the bond
-                    if reaction.is_stable(site, site.bondedto):
-                        next = site.bondedto.parent_atom
-                        if next not in visited:	
-                            queue.append(next)
-                    else:
-                        site1, site2 = site, site.bondedto
-                        reaction.break_bond(site1, site2)
-                        # Where do we recalculate the attractor? Need to construct a composite here.
-                        # The calculation of the attractor relies on the list of atoms in the parent composite.
-                        # Perhaps break bond should return two composites? Why wouldn't it?
-                        return Composite.traverse(site1.parent_atom), Composite.traverse(site2.parent_atom)
-            visited.append(current)
-        # TODO Will need to go through resulting list of atoms and create new composites or set parent_composite = None
-        return visited
+    def decompose(cls, atom):
+        """
+        
+        Parameters: An atom of the composite to be decomposed where the breadth-first traversal begins at the atom supplied.
+
+        Returns: A list of the composite particles into which the original composite has been decomposed.
+
+        The return statements will be:
+
+        decompose(composite 1 atom) + decomposite(composite 2 atom) when the composite belonging to the atom has failed stability somewhere or
+        [composite], where the composite has not required decomposition or is a composite of length 1
+
+        But won't this end up with a list of lists? We want it to be a single list. 
+        
+        """
+        if len(atom.parent_composite.atoms) == 1:
+            return [atom.parent_composite]
+        else:
+            queue = []
+            queue.append(atom)
+            visited = []
+            while queue:
+                current = queue.pop(0)
+                for site in current.interaction_sites:
+                    if site.bondedto is not None:
+                        # test the bond
+                        if reaction.is_stable(site, site.bondedto):
+                            next = site.bondedto.parent_atom
+                            if next not in visited:	
+                                queue.append(next)
+                        else:
+                            print('Unstable bond found...')
+                            site1, site2 = site, site.bondedto
+                            reaction.break_bond(site1, site2)
+                            # Where do we recalculate the attractor? Need to construct a composite here.
+                            # The calculation of the attractor relies on the list of atoms in the parent composite.
+                            # Perhaps break bond should return two composites? Why wouldn't it?
+                            return Composite.decompose(Composite.traverse(site1.parent_atom)[0]) + \
+                            Composite.decompose(Composite.traverse(site2.parent_atom)[0])
+                visited.append(current)
+            # TODO Will need to go through resulting list of atoms and create new composites or set parent_composite = None
+            return [Composite(visited)]
 
 
 
@@ -199,7 +228,7 @@ class Interaction_Site:
 if __name__ == "__main__":
     print("particle.py invoked as script...")
     # rbn.NodeSpace(1000)
-    a = Particle.new(12, 2)
+    a = Atom.new(12, 2)
     print(a)
     for site in a.interaction_sites:
         print(f'{site.spike_value()} {site.spike_type()}')

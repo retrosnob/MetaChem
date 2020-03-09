@@ -32,7 +32,7 @@ class RBN:
     @classmethod
     def compose(cls, rbn1, rbn2, nodes1, nodes2):
         # Replace this method with a get attractor that just returns the attractor for a bunch of nodes
-        # supplied by a composite particle. There is no need to have a composed RBN object. 
+        # supplied by a composite Atom. There is no need to have a composed RBN object. 
 
         assert(rbn1.k == rbn2.k) # An assumption at the moment but could be relaxed later.
 
