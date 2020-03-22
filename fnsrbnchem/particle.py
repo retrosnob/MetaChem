@@ -35,10 +35,9 @@ class Atom:
         Atom.id += 1
         obj.atoms = 1
         obj.parent_composite = None
-        obj.interaction_sites = []
-        for site in obj._calculate_interaction_lists():
-            obj.interaction_sites.append(Interaction_Site(site, parent_atom=obj))
+        obj.interaction_sites = Atom.calculate_interaction_sites(obj)
         return obj
+
      
     def __str__(self):
         s = 'Atom ' + str(self.id) + '\n'
@@ -49,9 +48,10 @@ class Atom:
         s += 'Spike types: ' +str([interaction_site.spike_type() for interaction_site in self.interaction_sites]) + '\n'
         return s
 
-    def _calculate_interaction_lists(self):
+    @staticmethod
+    def calculate_interaction_sites(parent):
         """
-        Creates and calculates the interaction list for an Atom. This should be done only once, when
+        Calculates and returns the interaction sites for an Atom parent. This should be done only once, when
         the Atom is created.
 
         Returns:
@@ -60,7 +60,7 @@ class Atom:
         """
         interaction_lists = []
         # Sort nodes in ascending order of influence.
-        sortednodes = sorted([node for node in self.rbn.nodes], key = lambda node: len(node.out_edges))
+        sortednodes = sorted([node for node in parent.rbn.nodes], key = lambda node: len(node.out_edges))
         while sortednodes:
             node = sortednodes.pop(0)
             site = []
@@ -74,7 +74,7 @@ class Atom:
                 nextnodes = [nextnode for nextnode in node.in_edges if nextnode in sortednodes]
             interaction_lists.append(site)
         
-        return interaction_lists
+        return [Interaction_Site(interaction_list, parent) for interaction_list in interaction_lists]
 
         # Create interaction lists
         # Sort nodes ascending on number of outgoing edges

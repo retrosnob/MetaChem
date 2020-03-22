@@ -49,6 +49,10 @@ def sitescanbond(site1, site2):
         else:
             return False
 
+def is_stable(site1, site2):
+    # For the time being....
+    return sitescanbond(site1, site2)
+    
 def bond(site1, site2):
     assert site1.bondedto is None and site2.bondedto is None, "Trying to bonded sites that are already bonded."
     do_edge_swaps(site1, site1)
@@ -66,10 +70,6 @@ def break_bond(site1, site2):
     # Create composite from each atom by traversing.
     # Then return two composites.
     return particle.Composite(particle.Composite.traverse(site1.parent_atom)), particle.Composite(particle.Composite.traverse(site2.parent_atom))
-
-def is_stable(site1, site2):
-    # For the time being....
-    return sitescanbond(site1, site2)
 
 def do_edge_swaps(int_site1, int_site2):
     """

@@ -5,3 +5,10 @@ the functions at the module level.
 
 Make the class -> module changes and then do a test of bonding two interaction sites twice in a row to take them back to where they were.
 
+node.next_state()
+
+lookup = 0
+i = 0
+for node in this.in_edges
+    lookup += 2^i * node.state
+    node.state = 1 if boolean_function
