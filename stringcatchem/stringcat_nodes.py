@@ -156,10 +156,6 @@ class StringCatTransfersSampler(node.Sampler):
 
     def pull(self):
         sample = self.containersin.read()[0]
-<<<<<<< HEAD
-=======
-        # Set up indices so that cells in the grid can be referenced.
->>>>>>> 911c8853e66a3e1e5d152a7ffaea81829ff15704
         indices = list(range(0, self.gridcols*self.gridrows))
         pairs = []
 
@@ -168,7 +164,7 @@ class StringCatTransfersSampler(node.Sampler):
         # to the pairs list as lists of two indices. Any cells that end up without neighbours are ignored.
         for cell in indices:
             # Set neighbouring cells of this cell. Note that the grid is toroidal. 
-             neighbours = [cell+1, cell-1, cell+self.gridrows, cell-self.gridrows]
+            neighbours = [cell+1, cell-1, cell+self.gridrows, cell-self.gridrows]
 
             for checkcell in neighbours:
                 # Remove cell from neighbours if it has already been removed from indices.
@@ -181,14 +177,10 @@ class StringCatTransfersSampler(node.Sampler):
             # These last lines are only done if the current cell still has neighbours.
             # Surely an else would have been clearer than a continue? 
             othercell = random.choice(neighbours)
-<<<<<<< HEAD
 
             if othercell not in indices:
                 raise Exception("Error in pull() method: Trying to remove " + str(othercell) + " from " + str(indices))
 
-=======
-            # Remove the cell and a random one of its neighbours from indices.
->>>>>>> 911c8853e66a3e1e5d152a7ffaea81829ff15704
             indices.remove(othercell)
             indices.remove(cell)
             # And append them as a list to pairs
