@@ -368,6 +368,86 @@ def test11():
 def test12():
     a = particle.Atom.new(12, 2)
 
+def test13():
+    # Muck around with some 6, 1 RBNs
+    cyc_lens = []
+    count = 1000
+    for i in range(count):
+        atom = rbn.RBN.new(6, 4)
+        # print(atom.summarystring())
+        cyc = rbn.RBN.get_cycle(atom.nodes)[1]
+        # print(cyc)
+        cyc_lens.append(len(cyc))
+    print(sum(cyc_lens)/count)
+    for i in range(1, max(cyc_lens) + 1):
+        print(f'{i} {cyc_lens.count(i)}')
 
+def num_unique_atoms():
+    lst = []
+    for i in range(2**6):
+        st = unique_orientations(i)
+        if not st in lst:
+            lst.append(st)
+    return lst
 
-test11()
+def list_to_int(lst):
+    return sum([2**i * val for i, val in enumerate(lst[::-1])])
+
+def int_to_list(i):
+    return list(map(int, f'{bin(i)[2:]:>06}'))
+
+def unique_orientations(i):
+    current = int_to_list(i)
+    config_list = []
+
+    # y1 at top: x1, x2, y1, y2, z1, z2
+    next = [current[0], current[1], current[2], current[3], current[4], current[5]]
+    config_list.append(list_to_int(next))
+    # rotate 3 times in new vertical axis = 0 -> 4 -> 1 -> 5 -> 0
+    for _ in range(3):
+        next = [next[5], next[4], next[2], next[3], next[0], next[1]]
+        config_list.append(list_to_int(next))
+
+    # y2 at top: z1, z2, y2, y1, x1, x2
+    next = [current[4], current[5], current[3], current[2], current[0], current[1]]
+    config_list.append(list_to_int(next))
+    # rotate 3 times in new vertical axis = 0 -> 4 -> 1 -> 5 -> 0
+    for _ in range(3):
+        next = [next[5], next[4], next[2], next[3], next[0], next[1]]
+        config_list.append(list_to_int(next))
+
+    # x1 at top: y2, y1, x1, x2, z1, z2
+    next = [current[3], current[2], current[0], current[1], current[4], current[5]]
+    config_list.append(list_to_int(next))
+    # rotate 3 times in new vertical axis = 0 -> 4 -> 1 -> 5 -> 0
+    for _ in range(3):
+        next = [next[5], next[4], next[2], next[3], next[0], next[1]]
+        config_list.append(list_to_int(next))
+
+    # x2 at top: z1, z2, x2, c1, y2, y1
+    next = [current[4], current[5], current[1], current[0], current[3], current[2]]
+    config_list.append(list_to_int(next))
+    # rotate 3 times in new vertical axis = 0 -> 4 -> 1 -> 5 -> 0
+    for _ in range(3):
+        next = [next[5], next[4], next[2], next[3], next[0], next[1]]
+        config_list.append(list_to_int(next))
+
+    # z1 at top: x1, x2, z1, z2, y2, y1
+    next = [current[0], current[1], current[4], current[5], current[3], current[2]]
+    config_list.append(list_to_int(next))
+    # rotate 3 times in new vertical axis = 0 -> 4 -> 1 -> 5 -> 0
+    for _ in range(3):
+        next = [next[5], next[4], next[2], next[3], next[0], next[1]]
+        config_list.append(list_to_int(next))
+
+    # z2 at top: y2, y1, z2, z1, x1, x2
+    next = [current[3], current[2], current[5], current[4], current[0], current[1]]
+    config_list.append(list_to_int(next))
+    # rotate 3 times in new vertical axis = 0 -> 4 -> 1 -> 5 -> 0
+    for _ in range(3):
+        next = [next[5], next[4], next[2], next[3], next[0], next[1]]
+        config_list.append(list_to_int(next))
+
+    return set(config_list)
+    
+test13()

@@ -22,9 +22,9 @@ class RBN:
             node.in_edges = random.sample([n for n in obj.nodes if n is not node], k)
 
             # Create the corresponding outgoing edges in the other nodes.
-            node.in_edges[0].out_edges.append(node)
-            node.in_edges[1].out_edges.append(node)
-
+            for i in range(k):
+                node.in_edges[i].out_edges.append(node)
+    
             # Create a random boolean function for this node.
             node.bool_func = random.randint(0, 2**(2**k)-1) # Nb randint is inclusive on both sides
         return obj
@@ -159,6 +159,9 @@ if __name__ == "__main__":
     print("Hello rbn...")
     # NodeSpace(100)
     # a = RBN.new(12, 2, NodeSpace.getInstance())
-    a = RBN.new(12, 2)
-    print(a.summarystring())
+    lens = []
+    for i in range(1000):
+        a = RBN.new(12, 2)
+        lens.append(len(RBN.get_cycle(a.nodes)[1]))
+    print(sum(lens)/len(lens))
 
