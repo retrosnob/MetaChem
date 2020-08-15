@@ -1,0 +1,2 @@
+op1;op2;config;transient length;attractor length;attractor;attractor from  min;count
+(<function f_and at 0x0000025F637D4D38>, 'AND');(<function f_and at 0x0000025F637D4D38>, 'AND');0;
